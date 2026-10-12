@@ -5,6 +5,10 @@ import { useEffect, useRef, useState } from "react";
 // Límite por grabación: mantiene el archivo pequeño para enviarlo al servidor.
 const MAX_SEGUNDOS = 120;
 
+function duracionEnPalabras(segundos) {
+  return segundos % 60 === 0 ? `${segundos / 60} minutos` : `${segundos} segundos`;
+}
+
 // Chrome y Android graban en webm; Safari (iPhone) en mp4. Se usa el primero disponible.
 const FORMATOS = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"];
 
@@ -15,7 +19,12 @@ export function mmss(segundos) {
 }
 
 // Botón de grabar con reproductor. "audio" es { blob, url, tipo, duracion } o null.
-export default function Grabadora({ audio, onAudio, deshabilitada = false }) {
+export default function Grabadora({
+  audio,
+  onAudio,
+  deshabilitada = false,
+  maxSegundos = MAX_SEGUNDOS,
+}) {
   const [grabando, setGrabando] = useState(false);
   const [segundos, setSegundos] = useState(0);
   const [error, setError] = useState("");
@@ -66,7 +75,7 @@ export default function Grabadora({ audio, onAudio, deshabilitada = false }) {
     setSegundos(0);
     setGrabando(true);
     relojRef.current = setInterval(() => setSegundos((s) => s + 1), 1000);
-    limiteRef.current = setTimeout(detener, MAX_SEGUNDOS * 1000);
+    limiteRef.current = setTimeout(detener, maxSegundos * 1000);
   }
 
   function detener() {
@@ -116,10 +125,10 @@ export default function Grabadora({ audio, onAudio, deshabilitada = false }) {
                 <span className="font-mono text-base font-semibold text-red-700">
                   {mmss(segundos)}
                 </span>{" "}
-                de {mmss(MAX_SEGUNDOS)}
+                de {mmss(maxSegundos)}
               </>
             ) : (
-              <>Hasta {MAX_SEGUNDOS / 60} minutos por grabación.</>
+              <>Hasta {duracionEnPalabras(maxSegundos)} por grabación.</>
             )}
           </p>
         </div>

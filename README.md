@@ -18,8 +18,8 @@ La app **no diagnostica ni receta**: solo ordena lo que el paciente dice para qu
 
 1. Ingresa datos generales (nombre, edad, sexo, contacto) en un formulario corto.
 2. Graba un audio explicando su padecimiento o consulta (también puede escribirlo).
-3. La IA transcribe, detecta qué información falta y hace hasta 5 preguntas de seguimiento (inicio, duración, intensidad, medicamentos, alergias, antecedentes). El paciente responde escribiendo o con un audio.
-4. Se genera la ficha; el paciente la revisa y corrige lo que haga falta.
+3. La IA transcribe, detecta qué información falta y hace hasta 5 preguntas de seguimiento (inicio, duración, intensidad, medicamentos, alergias, antecedentes). Se muestran una a la vez, como en una entrevista, y el paciente responde cada una por voz o texto.
+4. Se genera la ficha y se muestra como una hoja clínica; el paciente toca cualquier dato para corregirlo.
 5. La envía a su médico: comparte el PDF por WhatsApp o correo desde su propio teléfono, lo descarga, o la manda como texto.
 
 ## Contenido de la ficha
@@ -30,6 +30,7 @@ La app **no diagnostica ni receta**: solo ordena lo que el paciente dice para qu
 - Antecedentes: enfermedades, cirugías, alergias, medicamentos actuales, antecedentes familiares
 - Hábitos relevantes
 - Preguntas que el paciente quiere hacerle al médico
+- Espacio en blanco para notas y firma del médico (solo en el PDF)
 
 ## Cómo se implementa
 
@@ -39,11 +40,11 @@ La app **no diagnostica ni receta**: solo ordena lo que el paciente dice para qu
 | Grabación de voz | Grabadora nativa del navegador (`MediaRecorder`) | No requiere instalar nada ni servicios adicionales |
 | Voz → texto y razonamiento | API de Gemini (`gemini-3.8-flash`), llamada desde una ruta de servidor de Next.js | Un solo modelo entiende el audio, genera las preguntas y llena la ficha; la llave nunca llega al navegador |
 | Ficha estructurada | Salida JSON con esquema fijo | La ficha siempre sale con los mismos campos, sin texto libre impredecible |
-| PDF | Generado en el navegador (jsPDF) | La ficha no necesita pasar por el servidor para descargarse |
+| PDF | Generado en el navegador (jsPDF), con formato de hoja clínica: secciones numeradas, tablas y espacio para notas y firma del médico | La ficha no necesita pasar por el servidor para descargarse |
 | Envío al médico | Menú de compartir del teléfono (Web Share), más enlaces de WhatsApp y correo | El paciente la envía desde su propia cuenta; no hace falta un servicio de mensajería |
 | Publicación | Vercel | Despliega directo desde este repositorio, da un enlace público gratis y se actualiza con cada `git push` |
 
-Cada grabación se limita a 2 minutos para mantener el audio pequeño al enviarlo al servidor.
+El relato inicial se limita a 2 minutos y cada respuesta a 45 segundos, para mantener el audio pequeño al enviarlo al servidor.
 
 ## Alcance
 

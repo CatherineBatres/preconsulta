@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Grabadora from "./grabadora";
-import { SECCIONES, fichaComoTexto, fichaVacia } from "@/lib/ficha";
+import { SECCIONES, fichaComoTexto, fichaVacia, tituloNumerado } from "@/lib/ficha";
 import { crearArchivoPdf, precargarPdf } from "@/lib/pdf";
 
 const PASOS = ["Cuéntanos", "Preguntas", "Tu ficha"];
 const DATOS_VACIOS = { nombre: "", edad: "", sexo: "", contacto: "" };
+const SEXOS = ["Femenino", "Masculino", "Prefiero no decir"];
+const SEGUNDOS_POR_RESPUESTA = 45;
+const MAX_BYTES_AUDIOS = 4 * 1024 * 1024;
 
 const campo =
   "mt-1 block min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base text-slate-900 placeholder:text-slate-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/30";
@@ -16,6 +19,26 @@ const boton =
   "flex min-h-12 w-full items-center justify-center rounded-xl px-5 py-2.5 text-center text-base font-semibold transition focus:outline-none focus:ring-4 disabled:opacity-60";
 const botonPrincipal = `${boton} bg-teal-700 text-white hover:bg-teal-800 focus:ring-teal-700/30`;
 const botonSecundario = `${boton} border border-slate-300 bg-white text-slate-800 hover:bg-slate-100 focus:ring-slate-400/30`;
+
+// Estilos de la hoja de la ficha: cada dato se lee como texto y se edita al tocarlo.
+const datoHoja =
+  "block w-full resize-none bg-transparent px-3 py-2.5 text-base text-slate-900 placeholder:italic placeholder:text-slate-400 focus:bg-teal-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-teal-600/50";
+const etiquetaHoja = "bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-600";
+const filaHoja = "grid grid-cols-[7.25rem_1fr] border-t border-slate-200";
+const tituloHoja =
+  "border-t border-slate-300 bg-teal-50 px-3 py-2 text-sm font-semibold text-teal-900";
+
+// Cuadro de texto que crece con su contenido, para que la hoja se lea completa sin barras.
+function TextoQueCrece({ value, ...resto }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [value]);
+  return <textarea ref={ref} rows={1} value={value} {...resto} />;
+}
 
 function DatosGenerales({ datos, onChange }) {
   return (
@@ -57,9 +80,9 @@ function DatosGenerales({ datos, onChange }) {
           </label>
           <select id="sexo" name="sexo" value={datos.sexo} onChange={onChange} className={campo}>
             <option value="">Selecciona</option>
-            <option>Femenino</option>
-            <option>Masculino</option>
-            <option>Prefiero no decir</option>
+            {SEXOS.map((sexo) => (
+              <option key={sexo}>{sexo}</option>
+            ))}
           </select>
         </div>
       </div>
@@ -80,6 +103,111 @@ function DatosGenerales({ datos, onChange }) {
   );
 }
 
+// La ficha como hoja clínica: mismas secciones y numeración que el PDF.
+function HojaDeFicha({ datos, onDato, ficha, onFicha, fecha }) {
+  return (
+    <section className="overflow-hidden rounded-md border border-slate-300 bg-white shadow-sm">
+      <div className="border-t-4 border-teal-700 px-3 pt-3 pb-3">
+        <h2 className="text-lg font-semibold">Ficha previa a la consulta</h2>
+        <p className="text-sm text-slate-500">{fecha}</p>
+      </div>
+
+      <h3 className={tituloHoja}>{tituloNumerado(0, "Datos generales")}</h3>
+      <div className={filaHoja}>
+        <label htmlFor="nombre" className={etiquetaHoja}>
+          Nombre
+        </label>
+        <input
+          id="nombre"
+          name="nombre"
+          type="text"
+          value={datos.nombre}
+          onChange={onDato}
+          placeholder="No referido"
+          className={datoHoja}
+        />
+      </div>
+      <div className={filaHoja}>
+        <label htmlFor="edad" className={etiquetaHoja}>
+          Edad
+        </label>
+        <input
+          id="edad"
+          name="edad"
+          type="number"
+          inputMode="numeric"
+          min="0"
+          max="120"
+          value={datos.edad}
+          onChange={onDato}
+          placeholder="No referida"
+          className={datoHoja}
+        />
+      </div>
+      <div className={filaHoja}>
+        <label htmlFor="sexo" className={etiquetaHoja}>
+          Sexo
+        </label>
+        <select id="sexo" name="sexo" value={datos.sexo} onChange={onDato} className={datoHoja}>
+          <option value="">No referido</option>
+          {SEXOS.map((sexo) => (
+            <option key={sexo}>{sexo}</option>
+          ))}
+        </select>
+      </div>
+      <div className={filaHoja}>
+        <label htmlFor="contacto" className={etiquetaHoja}>
+          Contacto
+        </label>
+        <input
+          id="contacto"
+          name="contacto"
+          type="text"
+          value={datos.contacto}
+          onChange={onDato}
+          placeholder="No referido"
+          className={datoHoja}
+        />
+      </div>
+
+      {SECCIONES.map((seccion, i) => (
+        <div key={seccion.titulo}>
+          <h3 className={tituloHoja}>{tituloNumerado(i + 1, seccion.titulo)}</h3>
+          {seccion.campos.map((c) =>
+            seccion.campos.length === 1 ? (
+              <div key={c.id} className="border-t border-slate-200">
+                <label htmlFor={`ficha-${c.id}`} className="sr-only">
+                  {c.etiqueta}
+                </label>
+                <TextoQueCrece
+                  id={`ficha-${c.id}`}
+                  value={ficha[c.id]}
+                  onChange={(e) => onFicha(c.id, e.target.value)}
+                  placeholder="No referido"
+                  className={datoHoja}
+                />
+              </div>
+            ) : (
+              <div key={c.id} className={filaHoja}>
+                <label htmlFor={`ficha-${c.id}`} className={etiquetaHoja}>
+                  {c.etiqueta}
+                </label>
+                <TextoQueCrece
+                  id={`ficha-${c.id}`}
+                  value={ficha[c.id]}
+                  onChange={(e) => onFicha(c.id, e.target.value)}
+                  placeholder="No referido"
+                  className={datoHoja}
+                />
+              </div>
+            )
+          )}
+        </div>
+      ))}
+    </section>
+  );
+}
+
 export default function Home() {
   const [paso, setPaso] = useState(0);
   const [datos, setDatos] = useState(DATOS_VACIOS);
@@ -87,9 +215,10 @@ export default function Home() {
   const [audio, setAudio] = useState(null);
   const [transcripcion, setTranscripcion] = useState("");
   const [preguntas, setPreguntas] = useState([]);
-  const [respuestas, setRespuestas] = useState([]);
-  const [audioRespuestas, setAudioRespuestas] = useState(null);
+  const [respuestas, setRespuestas] = useState([]); // una por pregunta: { texto, audio }
+  const [actual, setActual] = useState(0);
   const [ficha, setFicha] = useState(fichaVacia);
+  const [fecha, setFecha] = useState("");
   const [alarma, setAlarma] = useState("");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
@@ -102,6 +231,10 @@ export default function Home() {
 
   function cambiarDato(e) {
     setDatos((d) => ({ ...d, [e.target.name]: e.target.value }));
+  }
+
+  function cambiarRespuesta(indice, cambios) {
+    setRespuestas((lista) => lista.map((r, i) => (i === indice ? { ...r, ...cambios } : r)));
   }
 
   function irA(nuevoPaso) {
@@ -144,11 +277,16 @@ export default function Home() {
     setError("");
     try {
       const r = await pedirFicha({ paso: "analizar", texto, audio: audio?.blob });
+      respuestas.forEach((anterior) => anterior.audio && URL.revokeObjectURL(anterior.audio.url));
       setTranscripcion(r.transcripcion);
       setAlarma(r.alarma);
       setFicha(r.ficha);
       setPreguntas(r.preguntas);
-      setRespuestas(r.preguntas.map(() => ""));
+      setRespuestas(r.preguntas.map(() => ({ texto: "", audio: null })));
+      setActual(0);
+      setFecha(
+        new Date().toLocaleDateString("es-GT", { day: "numeric", month: "long", year: "numeric" })
+      );
       irA(r.preguntas.length > 0 ? 1 : 2);
     } catch (e) {
       setError(e.message);
@@ -157,23 +295,32 @@ export default function Home() {
     }
   }
 
+  // Al terminar las preguntas se envían todas las respuestas juntas para completar la ficha.
   async function completar() {
-    const respondio = audioRespuestas || respuestas.some((r) => r.trim());
+    const respondio = respuestas.some((r) => r.audio || r.texto.trim());
     if (!respondio) {
       irA(2);
+      return;
+    }
+    const peso = respuestas.reduce((suma, r) => suma + (r.audio?.blob.size ?? 0), 0);
+    if (peso > MAX_BYTES_AUDIOS) {
+      setError("Los audios suman demasiado tiempo. Vuelve a grabar alguna respuesta más corta.");
       return;
     }
     setCargando(true);
     setError("");
     try {
-      const r = await pedirFicha({
+      const campos = {
         paso: "completar",
         ficha: JSON.stringify(ficha),
         respuestas: JSON.stringify(
-          preguntas.map((pregunta, i) => ({ pregunta, respuesta: respuestas[i] }))
+          preguntas.map((pregunta, i) => ({ pregunta, respuesta: respuestas[i].texto }))
         ),
-        audio: audioRespuestas?.blob,
+      };
+      respuestas.forEach((r, i) => {
+        if (r.audio) campos[`audio_${i}`] = r.audio.blob;
       });
+      const r = await pedirFicha(campos);
       setFicha(r.ficha);
       if (r.alarma) setAlarma(r.alarma);
       irA(2);
@@ -181,6 +328,25 @@ export default function Home() {
       setError(e.message);
     } finally {
       setCargando(false);
+    }
+  }
+
+  function siguiente() {
+    if (actual < preguntas.length - 1) {
+      setActual(actual + 1);
+      setError("");
+      window.scrollTo({ top: 0 });
+    } else {
+      completar();
+    }
+  }
+
+  function anterior() {
+    if (actual > 0) {
+      setActual(actual - 1);
+      setError("");
+    } else {
+      irA(0);
     }
   }
 
@@ -231,14 +397,14 @@ export default function Home() {
   function reiniciar() {
     if (!window.confirm("¿Borrar todo y empezar una ficha nueva?")) return;
     if (audio) URL.revokeObjectURL(audio.url);
-    if (audioRespuestas) URL.revokeObjectURL(audioRespuestas.url);
+    respuestas.forEach((r) => r.audio && URL.revokeObjectURL(r.audio.url));
     setDatos(DATOS_VACIOS);
     setTexto("");
     setAudio(null);
     setTranscripcion("");
     setPreguntas([]);
     setRespuestas([]);
-    setAudioRespuestas(null);
+    setActual(0);
     setFicha(fichaVacia());
     setAlarma("");
     irA(0);
@@ -253,6 +419,9 @@ export default function Home() {
           fichaComoTexto(datos, ficha, { negritas: false })
         )}`
       : "#";
+
+  const respuesta = respuestas[actual];
+  const esUltima = actual === preguntas.length - 1;
 
   return (
     <main className="min-h-screen flex-1 bg-slate-50 font-sans text-slate-900">
@@ -302,6 +471,7 @@ export default function Home() {
             <section className={tarjeta}>
               <h2 className="text-lg font-semibold">Cuéntanos qué te sucede</h2>
               <p className="mt-1 mb-4 text-sm text-slate-600">
+                Habla como se lo contarías a tu médico: qué sientes, desde cuándo y qué has hecho.
                 Puedes grabar un audio, escribirlo, o ambos.
               </p>
               <Grabadora audio={audio} onAudio={setAudio} deshabilitada={cargando} />
@@ -333,46 +503,60 @@ export default function Home() {
           </>
         )}
 
-        {/* Paso 2: preguntas de seguimiento */}
-        {paso === 1 && (
+        {/* Paso 2: entrevista, una pregunta a la vez */}
+        {paso === 1 && respuesta && (
           <>
             {transcripcion && (
-              <section className={tarjeta}>
-                <h2 className="text-sm font-semibold text-slate-500">Esto fue lo que escuchamos</h2>
-                <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">{transcripcion}</p>
-              </section>
+              <details className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm">
+                <summary className="cursor-pointer font-medium text-slate-700">
+                  Ver lo que escuchamos de tu relato
+                </summary>
+                <p className="mt-2 whitespace-pre-wrap text-slate-700">{transcripcion}</p>
+              </details>
             )}
 
             <section className={tarjeta}>
-              <h2 className="text-lg font-semibold">Unas preguntas más</h2>
-              <p className="mt-1 text-sm text-slate-600">
-                Ayudan a completar tu ficha. Responde las que puedas, escribiendo o con un solo audio.
-              </p>
-              <ol className="mt-4 flex flex-col gap-4">
-                {preguntas.map((pregunta, i) => (
-                  <li key={i}>
-                    <label htmlFor={`respuesta-${i}`} className={etiqueta}>
-                      {i + 1}. {pregunta}
-                    </label>
-                    <textarea
-                      id={`respuesta-${i}`}
-                      rows={2}
-                      maxLength={1000}
-                      value={respuestas[i] ?? ""}
-                      onChange={(e) =>
-                        setRespuestas((actual) => actual.map((r, j) => (j === i ? e.target.value : r)))
-                      }
-                      className={campo}
+              <div className="flex items-center gap-3">
+                <p className="shrink-0 text-sm font-medium text-teal-800">
+                  Pregunta {actual + 1} de {preguntas.length}
+                </p>
+                <div className="flex flex-1 gap-1" aria-hidden="true">
+                  {preguntas.map((_, i) => (
+                    <span
+                      key={i}
+                      className={`h-1 flex-1 rounded-full ${i <= actual ? "bg-teal-700" : "bg-slate-200"}`}
                     />
-                  </li>
-                ))}
-              </ol>
-              <p className={`${etiqueta} mt-5 mb-2`}>O responde todas con un audio</p>
-              <Grabadora
-                audio={audioRespuestas}
-                onAudio={setAudioRespuestas}
-                deshabilitada={cargando}
+                  ))}
+                </div>
+              </div>
+
+              <h2 className="mt-4 text-2xl leading-snug font-semibold" aria-live="polite">
+                {preguntas[actual]}
+              </h2>
+
+              <div className="mt-5">
+                <Grabadora
+                  key={actual}
+                  audio={respuesta.audio}
+                  onAudio={(nuevo) => cambiarRespuesta(actual, { audio: nuevo })}
+                  deshabilitada={cargando}
+                  maxSegundos={SEGUNDOS_POR_RESPUESTA}
+                />
+              </div>
+              <label htmlFor="respuesta" className={`${etiqueta} mt-4`}>
+                O escribe tu respuesta
+              </label>
+              <textarea
+                id="respuesta"
+                rows={2}
+                maxLength={1000}
+                value={respuesta.texto}
+                onChange={(e) => cambiarRespuesta(actual, { texto: e.target.value })}
+                className={campo}
               />
+              <p className="mt-3 text-sm text-slate-500">
+                Si no lo sabes o no aplica, déjala vacía y continúa.
+              </p>
             </section>
 
             {error && (
@@ -380,53 +564,29 @@ export default function Home() {
                 {error}
               </p>
             )}
-            <button type="button" onClick={completar} disabled={cargando} className={botonPrincipal}>
-              {cargando ? "Preparando tu ficha…" : "Ver mi ficha"}
+            <button type="button" onClick={siguiente} disabled={cargando} className={botonPrincipal}>
+              {cargando ? "Preparando tu ficha…" : esUltima ? "Ver mi ficha" : "Siguiente pregunta"}
             </button>
-            <button type="button" onClick={() => irA(0)} disabled={cargando} className={botonSecundario}>
-              Volver
+            <button type="button" onClick={anterior} disabled={cargando} className={botonSecundario}>
+              {actual > 0 ? "Pregunta anterior" : "Volver a mi relato"}
             </button>
           </>
         )}
 
-        {/* Paso 3: ficha editable y envío */}
+        {/* Paso 3: la ficha como hoja, editable al tocar, y el envío */}
         {paso === 2 && (
           <>
             <p className="text-sm text-slate-600">
-              Revisa tu ficha y corrige lo que haga falta. Lo que dejes vacío aparecerá como “No
-              referido”.
+              Así la verá tu médico. Toca cualquier dato para corregirlo o completarlo.
             </p>
 
-            <section className={tarjeta}>
-              <h2 className="text-lg font-semibold">Datos generales</h2>
-              <DatosGenerales datos={datos} onChange={cambiarDato} />
-            </section>
-
-            {SECCIONES.map((seccion) => (
-              <section key={seccion.titulo} className={tarjeta}>
-                <h2 className="text-lg font-semibold">{seccion.titulo}</h2>
-                <div className="mt-3 flex flex-col gap-4">
-                  {seccion.campos.map((c) => (
-                    <div key={c.id}>
-                      <label
-                        htmlFor={`ficha-${c.id}`}
-                        className={seccion.campos.length === 1 ? "sr-only" : etiqueta}
-                      >
-                        {c.etiqueta}
-                      </label>
-                      <textarea
-                        id={`ficha-${c.id}`}
-                        rows={2}
-                        value={ficha[c.id]}
-                        onChange={(e) => setFicha((f) => ({ ...f, [c.id]: e.target.value }))}
-                        placeholder="No referido"
-                        className={campo}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </section>
-            ))}
+            <HojaDeFicha
+              datos={datos}
+              onDato={cambiarDato}
+              ficha={ficha}
+              onFicha={(id, valor) => setFicha((f) => ({ ...f, [id]: valor }))}
+              fecha={fecha}
+            />
 
             <section className={tarjeta}>
               <h2 className="text-lg font-semibold">Envíala a tu médico</h2>
@@ -440,12 +600,18 @@ export default function Home() {
                 <button type="button" onClick={descargarPdf} className={botonSecundario}>
                   Descargar PDF
                 </button>
+                <p className="mt-2 text-sm text-slate-600">O envíala como mensaje de texto:</p>
                 <div className="grid grid-cols-2 gap-3">
-                  <a href={enlaceWhatsApp} target="_blank" rel="noopener noreferrer" className={`${botonSecundario} text-sm`}>
-                    WhatsApp (texto)
+                  <a
+                    href={enlaceWhatsApp}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={botonSecundario}
+                  >
+                    WhatsApp
                   </a>
-                  <a href={enlaceCorreo} className={`${botonSecundario} text-sm`}>
-                    Correo (texto)
+                  <a href={enlaceCorreo} className={botonSecundario}>
+                    Correo
                   </a>
                 </div>
               </div>
