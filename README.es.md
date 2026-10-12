@@ -2,7 +2,7 @@
 
 **Convierte un audio en una ficha médica ordenada antes de la consulta.** El paciente cuenta con su voz qué le pasa, una IA le hace unas cuantas preguntas de seguimiento y el resultado es una ficha estándar en PDF, lista para enviar al médico.
 
-**Demo:** https://preconsulta-iota.vercel.app/ · **Artículo:** [De un audio a una ficha médica](ENLACE_DEL_ARTICULO) · **English:** [README.md](README.md)
+**Demo:** https://preconsulta-iota.vercel.app/ · **Artículo:** [De un audio a una ficha médica](https://catherinebatres.substack.com/p/de-un-audio-a-una-ficha-medica-lo) · **English:** [README.md](README.md)
 
 > PreConsulta no diagnostica ni recomienda tratamientos: solo ordena lo que dice el paciente. Todas las capturas usan datos inventados.
 

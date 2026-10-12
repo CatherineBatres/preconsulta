@@ -2,7 +2,7 @@
 
 **Turn a voice note into a clean pre-visit medical record.** The patient tells their story out loud, an AI asks a few follow-up questions, and the result is a standard record (PDF) ready to send to the doctor.
 
-**Live demo:** https://preconsulta-iota.vercel.app/ · **Article (Spanish):** [De un audio a una ficha médica](ENLACE_DEL_ARTICULO) · **Español:** [README.es.md](README.es.md)
+**Live demo:** https://preconsulta-iota.vercel.app/ · **Article (Spanish):** [De un audio a una ficha médica](https://catherinebatres.substack.com/p/de-un-audio-a-una-ficha-medica-lo) · **Español:** [README.es.md](README.es.md)
 
 > PreConsulta does not diagnose or recommend treatment. It only organizes what the patient says. All screenshots use made-up data.
 
