@@ -1,6 +1,8 @@
 # PreConsulta — ficha médica previa a la consulta, por voz
 
-> Nombre y alcance tentativos. Este documento describe la propuesta antes de implementarla y puede cambiar sobre la marcha.
+**Demo:** https://preconsulta-iota.vercel.app/
+
+> Proyecto en desarrollo. El alcance puede cambiar sobre la marcha.
 
 ## El problema
 
@@ -14,11 +16,11 @@ La app **no diagnostica ni receta**: solo ordena lo que el paciente dice para qu
 
 ## Flujo del usuario
 
-1. Ingresa datos generales (edad, sexo, contacto) en un formulario corto.
+1. Ingresa datos generales (nombre, edad, sexo, contacto) en un formulario corto.
 2. Graba un audio explicando su padecimiento o consulta (también puede escribirlo).
-3. La IA transcribe, detecta qué información falta y hace de 3 a 5 preguntas de seguimiento (inicio, duración, intensidad, medicamentos, alergias, antecedentes). El paciente responde por voz o texto.
+3. La IA transcribe, detecta qué información falta y hace hasta 5 preguntas de seguimiento (inicio, duración, intensidad, medicamentos, alergias, antecedentes). El paciente responde escribiendo o con un audio.
 4. Se genera la ficha; el paciente la revisa y corrige lo que haga falta.
-5. Descarga el PDF y lo comparte con su médico (correo, WhatsApp, impreso).
+5. La envía a su médico: comparte el PDF por WhatsApp o correo desde su propio teléfono, lo descarga, o la manda como texto.
 
 ## Contenido de la ficha
 
@@ -35,62 +37,75 @@ La app **no diagnostica ni receta**: solo ordena lo que el paciente dice para qu
 |---|---|---|
 | Interfaz | Next.js + React (JavaScript) con Tailwind CSS | Control total del diseño en teléfono, que es donde más se usará |
 | Grabación de voz | Grabadora nativa del navegador (`MediaRecorder`) | No requiere instalar nada ni servicios adicionales |
-| Voz → texto y razonamiento | API de Gemini (modelo Flash vigente), llamada desde una ruta de servidor de Next.js | Un solo proveedor entiende el audio, genera las preguntas y llena la ficha; la llave nunca llega al navegador |
+| Voz → texto y razonamiento | API de Gemini (`gemini-3.8-flash`), llamada desde una ruta de servidor de Next.js | Un solo modelo entiende el audio, genera las preguntas y llena la ficha; la llave nunca llega al navegador |
 | Ficha estructurada | Salida JSON con esquema fijo | La ficha siempre sale con los mismos campos, sin texto libre impredecible |
 | PDF | Generado en el navegador (jsPDF) | La ficha no necesita pasar por el servidor para descargarse |
+| Envío al médico | Menú de compartir del teléfono (Web Share), más enlaces de WhatsApp y correo | El paciente la envía desde su propia cuenta; no hace falta un servicio de mensajería |
 | Publicación | Vercel | Despliega directo desde este repositorio, da un enlace público gratis y se actualiza con cada `git push` |
-
-El nombre del modelo y la llave de la API se dejan en variables de entorno para poder cambiarlos sin tocar el código.
 
 Cada grabación se limita a 2 minutos para mantener el audio pequeño al enviarlo al servidor.
 
 ## Alcance
 
-**Incluye (MVP):** captura por voz y texto, preguntas de seguimiento, ficha editable, descarga en PDF, enlace público.
+**Incluye (MVP):** captura por voz y texto, preguntas de seguimiento, ficha editable, PDF, envío por WhatsApp o correo desde el teléfono del paciente, enlace público.
 
-**No incluye por ahora:** cuentas de usuario, base de datos, envío automático al médico, videollamada, integración con expedientes clínicos.
+**No incluye por ahora:** cuentas de usuario, base de datos, envío automático desde la app sin intervención del paciente, videollamada, integración con expedientes clínicos.
 
 No guardar nada en servidor es intencional: reduce el trabajo y evita almacenar datos de salud.
 
 ## Consideraciones
 
-- **No es un dispositivo médico.** La app lo indica de forma visible y, si el paciente describe síntomas de alarma (dolor de pecho, dificultad para respirar, etc.), le recomienda buscar atención de emergencia en vez de continuar.
-- **Privacidad.** El audio y el texto se envían a una API externa para procesarse. Para la demo se usarán datos ficticios; antes de un uso real hay que revisar los términos de tratamiento de datos del proveedor.
+- **No es un dispositivo médico.** La app lo indica de forma visible y, si el paciente describe señales de alarma (dolor de pecho, dificultad para respirar, etc.), le muestra un aviso para buscar atención de emergencia.
+- **Privacidad.** El audio y las respuestas se envían a la API de Gemini para procesarse; el nombre y el contacto no se envían. La app pide a Google no conservar la conversación y no guarda nada por su cuenta. Para la demo se usan datos ficticios; antes de un uso real hay que revisar los términos de tratamiento de datos del proveedor.
 - **El paciente tiene la última palabra.** Nada llega a la ficha final sin que él lo haya podido revisar y editar.
 
 ## Plan de trabajo
 
-1. **Base:** repositorio, app mínima desplegada con enlace público.
-2. **Voz y ficha:** grabación, transcripción y llenado de la ficha estructurada.
-3. **Seguimiento:** preguntas según lo que falte, edición de la ficha, PDF.
-4. **Cierre:** pruebas con casos de ejemplo, avisos de seguridad, documentación.
+1. **Base:** repositorio, app mínima desplegada con enlace público. ✔
+2. **Voz y ficha:** grabación, transcripción y llenado de la ficha estructurada. ✔
+3. **Seguimiento:** preguntas según lo que falte, edición de la ficha, PDF y envío. ✔
+4. **Cierre:** pruebas con casos de ejemplo, ajustes y documentación.
 
 ## Cómo ejecutarlo localmente
 
-Requiere Node.js 20 o superior.
+Requiere Node.js 20.9 o superior y una llave de la API de Gemini.
 
-```bash
-npm install
-npm run dev
-```
+1. Instala las dependencias:
 
-La app queda en `http://localhost:3000`.
+   ```bash
+   npm install
+   ```
 
-## Estructura prevista del repositorio
+2. Crea un archivo `.env.local` en la raíz con la llave (este archivo no se sube al repo):
+
+   ```
+   GEMINI_API_KEY=tu_llave
+   ```
+
+   Opcional: `GEMINI_MODEL` para usar otro modelo sin tocar el código.
+
+3. Inicia la app:
+
+   ```bash
+   npm run dev
+   ```
+
+La app queda en `http://localhost:3000`. En Vercel, la llave se configura en **Settings → Environment Variables**.
+
+## Estructura del repositorio
 
 ```
 preconsulta/
 ├── app/
-│   ├── page.js             # pantalla principal: formulario, grabación y ficha
+│   ├── page.js             # los tres pasos: relato, preguntas y ficha
+│   ├── grabadora.js        # botón de grabar y reproductor de audio
 │   ├── layout.js           # título, idioma y estilos globales
 │   └── api/
-│       └── ficha/route.js  # ruta de servidor: llama al modelo con la llave
+│       └── ficha/route.js  # ruta de servidor: llama a Gemini con la llave
 ├── lib/
-│   ├── ficha.js            # esquema de la ficha
+│   ├── ficha.js            # campos de la ficha (los usan la IA, la pantalla y el PDF)
 │   └── pdf.js              # generación del PDF
 ├── .env.local              # llave de la API (no se sube al repo)
 ├── package.json
 └── README.md
 ```
-
-`app/api/` y `lib/` se agregan en las siguientes etapas.
