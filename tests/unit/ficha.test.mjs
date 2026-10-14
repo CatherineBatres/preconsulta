@@ -56,3 +56,50 @@ test("fichaComoTexto sin negritas sirve para correo", () => {
   assert.ok(texto.startsWith("FICHA PREVIA A LA CONSULTA"));
   assert.doesNotMatch(texto, /\*/);
 });
+
+// ---- Modos: primera vez y consulta de control ----
+import { aplicarRespuestas, camposPreguntables, seccionesPara, SIN_RESPUESTA } from "../../lib/ficha.js";
+
+test("la sección de evolución solo aparece en la consulta de control", () => {
+  const primera = seccionesPara("primera").map((s) => s.titulo);
+  const control = seccionesPara("control").map((s) => s.titulo);
+  assert.ok(!primera.includes("Evolución desde la consulta anterior"));
+  assert.equal(control[1], "Evolución desde la consulta anterior");
+  assert.equal(control.length, primera.length + 1);
+});
+
+test("en control se pregunta primero por la evolución; el motivo nunca se pregunta", () => {
+  assert.deepEqual(camposPreguntables("control").slice(0, 2), ["evolucion", "tratamiento"]);
+  assert.ok(!camposPreguntables("primera").includes("evolucion"));
+  assert.ok(!camposPreguntables("control").includes("motivo"));
+});
+
+test("'No sé' y 'No aplica' quedan escritos, y lo que se dejó en blanco queda como 'Sin respuesta'", () => {
+  const ficha = { ...fichaVacia(), duracion: "Dos horas" };
+  const respondidas = [
+    { campo: "medicamentos", respuesta: "No sé", conAudio: false },
+    { campo: "alergias", respuesta: "No aplica", conAudio: false },
+    { campo: "sintomas", respuesta: "", conAudio: false },
+    { campo: "habitos", respuesta: "", conAudio: true },
+    { campo: "duracion", respuesta: "No sé", conAudio: false },
+  ];
+  const parcial = aplicarRespuestas(ficha, respondidas);
+  assert.equal(parcial.medicamentos, "No sabe");
+  assert.equal(parcial.alergias, "No aplica");
+  assert.equal(parcial.sintomas, "");
+  const final = aplicarRespuestas(ficha, respondidas, { final: true });
+  assert.equal(final.sintomas, SIN_RESPUESTA);
+  assert.equal(final.habitos, "", "si respondió con audio no se marca como 'Sin respuesta'");
+  assert.equal(final.duracion, "Dos horas", "nunca pisa un dato que ya existe");
+});
+
+test("fichaComoTexto de control incluye la consulta anterior y la evolución", () => {
+  const ficha = { ...fichaVacia(), motivo: "Control de dolor de cabeza", evolucion: "Mejoró" };
+  const texto = fichaComoTexto({ nombre: "", edad: "", sexo: "", contacto: "" }, ficha, {
+    modo: "control",
+    anterior: { fecha: "2026-10-11T18:00:00.000Z", motivo: "Dolor de cabeza" },
+  });
+  assert.match(texto, /^\*Ficha de control y seguimiento\*/);
+  assert.match(texto, /Consulta anterior: .*2026: Dolor de cabeza/);
+  assert.match(texto, /\*Evolución desde la consulta anterior\*\n- Evolución de los síntomas: Mejoró/);
+});
