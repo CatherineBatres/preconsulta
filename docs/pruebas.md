@@ -15,6 +15,6 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-El comando compila la app, levanta la IA simulada en el puerto 3222 y la app en el 3100, y corre `tests/e2e/preconsulta.spec.mjs`.
+El comando compila la app, levanta la IA simulada en el puerto 3222 y la app en el 3100, y corre `tests/e2e/preconsulta.spec.mjs` (flujo completo) y `tests/e2e/tutorial.spec.mjs` (tutorial de bienvenida). Son 9 pruebas. En `preconsulta.spec.mjs` el tutorial se marca como visto antes de cada prueba para que no tape la pantalla.
 
 Ver también: [Volver al README](../README.es.md)

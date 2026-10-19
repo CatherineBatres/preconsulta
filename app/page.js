@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Grabadora from "./grabadora";
+import Tutorial, { tutorialVisto } from "./tutorial";
+import { Icono, Logo } from "./marca";
 import {
   aplicarRespuestas,
   fechaLegible,
@@ -25,12 +27,12 @@ const MAX_BYTES_AUDIOS = 4 * 1024 * 1024;
 const MAX_RONDAS = 3; // rondas de preguntas como máximo, para no cansar al paciente
 
 const campo =
-  "mt-1 block min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base text-slate-900 placeholder:text-slate-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/30";
+  "mt-1 block min-h-12 w-full rounded-lg border border-borde bg-white px-3 py-2.5 text-base text-tinta placeholder:text-slate-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/30";
 const etiqueta = "block text-sm font-medium text-slate-700";
-const tarjeta = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm";
+const tarjeta = "rounded-2xl border border-borde bg-white p-5 shadow-[0_1px_2px_rgba(14,42,51,0.04),0_4px_16px_rgba(14,42,51,0.04)]";
 const boton =
   "flex min-h-12 w-full items-center justify-center rounded-xl px-5 py-2.5 text-center text-base font-semibold transition focus:outline-none focus:ring-4 disabled:opacity-60";
-const botonPrincipal = `${boton} bg-teal-700 text-white hover:bg-teal-800 focus:ring-teal-700/30`;
+const botonPrincipal = `${boton} bg-marca text-white shadow-sm hover:bg-marca-oscuro focus:ring-marca/30`;
 const botonSecundario = `${boton} border border-slate-300 bg-white text-slate-800 hover:bg-slate-100 focus:ring-slate-400/30`;
 const botonChico =
   "min-h-11 rounded-full border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-4 focus:ring-slate-400/30 disabled:opacity-60";
@@ -123,8 +125,13 @@ function DatosGenerales({ datos, onChange }) {
 // Selector de "Primera vez" o "Consulta de control". Cada opción explica qué cambia.
 function SelectorDeModo({ modo, onElegir, deshabilitado }) {
   const opciones = [
-    { id: "primera", nombre: "Primera vez", detalle: "Cuéntanos desde el inicio qué te sucede." },
-    { id: "control", nombre: "Control o seguimiento", detalle: "Retomamos la ficha que guardaste en este teléfono." },
+    { id: "primera", icono: "nueva", nombre: "Primera vez", detalle: "Cuéntanos desde el inicio qué te sucede." },
+    {
+      id: "control",
+      icono: "control",
+      nombre: "Control o seguimiento",
+      detalle: "Retomamos la ficha que guardaste en este teléfono.",
+    },
   ];
   return (
     <section className={tarjeta}>
@@ -139,11 +146,18 @@ function SelectorDeModo({ modo, onElegir, deshabilitado }) {
               aria-pressed={elegida}
               disabled={deshabilitado}
               onClick={() => onElegir(opcion.id)}
-              className={`flex flex-col items-start justify-start rounded-xl border px-3 py-3 text-left transition focus:outline-none focus:ring-4 focus:ring-teal-700/30 ${
-                elegida ? "border-teal-700 bg-teal-50 ring-1 ring-teal-700" : "border-slate-300 bg-white hover:bg-slate-50"
+              className={`relative flex flex-col items-start justify-start rounded-xl border px-3 py-3 text-left transition focus:outline-none focus:ring-4 focus:ring-marca/25 ${
+                elegida ? "border-marca bg-marca-suave/60 ring-1 ring-marca" : "border-borde bg-white hover:bg-slate-50"
               }`}
             >
-              <span className="block text-base font-semibold text-slate-900">{opcion.nombre}</span>
+              <span
+                className={`mb-2 flex h-9 w-9 items-center justify-center rounded-lg ${
+                  elegida ? "bg-marca text-white" : "bg-marca-suave text-marca"
+                }`}
+              >
+                <Icono nombre={opcion.icono} className="h-5 w-5" />
+              </span>
+              <span className="block text-base font-semibold text-tinta">{opcion.nombre}</span>
               <span className="mt-1 block text-sm leading-snug text-slate-600">{opcion.detalle}</span>
             </button>
           );
@@ -343,6 +357,16 @@ export default function Home() {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
   const [aviso, setAviso] = useState("");
+  const [tutorialAbierto, setTutorialAbierto] = useState(false);
+
+  // El tutorial se muestra solo la primera vez que alguien abre la app en este teléfono.
+  useEffect(() => {
+    // Se lee después de mostrar la página, porque el servidor no conoce el localStorage.
+    const espera = setTimeout(() => {
+      if (!tutorialVisto()) setTutorialAbierto(true);
+    }, 0);
+    return () => clearTimeout(espera);
+  }, []);
 
   const anterior = modo === "control" ? guardada?.anterior ?? null : null;
 
@@ -637,32 +661,69 @@ export default function Home() {
   const esControl = modo === "control";
 
   return (
-    <main className="min-h-screen flex-1 bg-slate-50 font-sans text-slate-900">
-      <div className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-8">
-        <header>
-          <h1 className="text-3xl font-semibold tracking-tight">PreConsulta</h1>
-          <p className="mt-1 text-slate-600">Prepara tu ficha médica antes de la consulta.</p>
-        </header>
+    <main className="min-h-screen flex-1 bg-fondo font-sans text-tinta">
+      <header className="sticky top-0 z-30 border-b border-borde bg-white/90 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-xl items-center justify-between gap-3 px-4 py-3">
+          <div className="flex items-center gap-2.5">
+            <Logo className="h-9 w-9" />
+            <div className="leading-tight">
+              <h1 className="text-lg font-semibold">PreConsulta</h1>
+              <p className="text-xs text-slate-500">Tu ficha médica antes de la cita</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setTutorialAbierto(true)}
+            className="min-h-10 shrink-0 rounded-full border border-borde px-3.5 text-sm font-medium text-tinta transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-marca/25"
+          >
+            ¿Cómo funciona?
+          </button>
+        </div>
+      </header>
 
-        <ol className="grid grid-cols-3 gap-2" aria-label="Pasos">
+      <Tutorial
+        abierto={tutorialAbierto}
+        onCerrar={() => setTutorialAbierto(false)}
+        onElegirModo={(m) => {
+          elegirModo(m);
+          if (paso !== 0) irA(0);
+        }}
+      />
+
+      <div className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
+        <ol className="flex items-center gap-2" aria-label="Pasos">
           {PASOS.map((nombre, i) => (
-            <li key={nombre} aria-current={i === paso ? "step" : undefined}>
-              <div className={`h-1.5 rounded-full ${i <= paso ? "bg-teal-700" : "bg-slate-200"}`} />
-              <p
-                className={`mt-1.5 text-xs font-medium ${
-                  i === paso ? "text-teal-800" : "text-slate-500"
+            <li
+              key={nombre}
+              aria-current={i === paso ? "step" : undefined}
+              className={`flex items-center gap-2 ${i < PASOS.length - 1 ? "flex-1" : ""}`}
+            >
+              <span
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                  i < paso
+                    ? "bg-marca text-white"
+                    : i === paso
+                      ? "bg-marca text-white ring-4 ring-marca/15"
+                      : "border border-borde bg-white text-slate-500"
                 }`}
               >
-                {i + 1}. {nombre}
-              </p>
+                {i < paso ? "✓" : i + 1}
+              </span>
+              <span className={`text-sm font-medium ${i === paso ? "text-tinta" : "text-slate-500"}`}>
+                {nombre}
+              </span>
+              {i < PASOS.length - 1 && (
+                <span className={`h-px flex-1 ${i < paso ? "bg-marca" : "bg-borde"}`} aria-hidden="true" />
+              )}
             </li>
           ))}
         </ol>
 
         {paso === 0 && (
-          <p className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            Esta herramienta no da diagnósticos ni tratamientos. Si tienes una emergencia, busca
-            atención médica de inmediato.
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
+            <strong className="font-semibold">No te responde un médico:</strong> armas tu ficha y tú se la
+            envías. No da diagnósticos ni tratamientos. Si tienes una emergencia, busca atención médica de
+            inmediato.
           </p>
         )}
 

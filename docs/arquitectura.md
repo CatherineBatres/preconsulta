@@ -7,6 +7,7 @@
 | Parte | Dónde corre | Por qué ahí |
 | --- | --- | --- |
 | Pantallas (`app/page.js`) | Navegador del paciente | La app se abre con un enlace en cualquier teléfono, sin instalar nada |
+| Tutorial (`app/tutorial.js`) | Navegador del paciente | Aparece solo la primera vez (se recuerda en `localStorage`, clave `preconsulta.tutorialVisto`) y se vuelve a abrir con "¿Cómo funciona?" |
 | Grabadora (`app/grabadora.js`) | Navegador del paciente | El navegador ya trae una API de micrófono (`MediaRecorder`) |
 | Transcripción en vivo | Reconocimiento de voz del navegador (Chrome lo envía a Google, Safari a Apple) | Gratis e inmediata; solo guía al paciente, la IA siempre trabaja con el audio grabado |
 | PDF (`lib/pdf.js`) | Navegador del paciente | La ficha no necesita volver a un servidor para convertirse en archivo |

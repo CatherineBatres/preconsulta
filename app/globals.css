@@ -1,26 +1,31 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/* Paleta de PreConsulta: verde clínico (el mismo del PDF) y un azul petróleo para los títulos. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-tinta: #0e2a33; /* títulos y texto fuerte */
+  --color-marca: #0f766e; /* botones y acentos (igual al PDF) */
+  --color-marca-oscuro: #115e59;
+  --color-marca-suave: #e6f2f0; /* fondos de íconos y opciones elegidas */
+  --color-fondo: #f3f6f7; /* fondo de la página */
+  --color-borde: #dbe3e6;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  color-scheme: light; /* la app se ve igual aunque el teléfono esté en modo oscuro */
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-fondo);
+  color: var(--color-tinta);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--color-tinta);
+  letter-spacing: -0.01em;
 }

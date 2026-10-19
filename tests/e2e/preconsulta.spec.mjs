@@ -22,6 +22,11 @@ async function simularCompartir(page) {
   });
 }
 
+// El tutorial de bienvenida se prueba aparte (tutorial.spec.mjs); aquí se da por visto.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("preconsulta.tutorialVisto", "1"));
+});
+
 test("primera vez: preguntas en rondas hasta llenar la ficha, PDF y guardado en el teléfono", async ({ page }) => {
   await page.goto("/");
 

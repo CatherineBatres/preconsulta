@@ -9,6 +9,7 @@ Dos entregas: un feature nuevo, feedback con usuarios reales y correcciones a pa
 - [x] Reorganizar el README en documentos separados
 - [x] Historial de consultas: evolución y respuesta al tratamiento ([decisión 5](decisiones.md#5-historial-de-consultas-en-el-teléfono-no-en-una-base-de-datos-14-de-octubre-de-2026))
 - [ ] Probar el historial en un teléfono real con Gemini
+- [x] Mini tutorial de bienvenida y rediseño visual (encabezado con logo, pasos numerados, aviso "No te responde un médico") a partir del feedback del Paciente 1
 - [x] Kit de feedback: [guía de una página, guías de preguntas y formato de notas](feedback/README.md)
 
 ## Semana 2: entrega el 28 de octubre
