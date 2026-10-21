@@ -6,7 +6,9 @@ import {
   fichaComoTexto,
   fichaVacia,
   lineaPaciente,
+  motivoConEvolucion,
   normalizarFicha,
+  PRIORIDAD,
   tituloNumerado,
 } from "../../lib/ficha.js";
 
@@ -102,4 +104,20 @@ test("fichaComoTexto de control incluye la consulta anterior y la evolución", (
   assert.match(texto, /^\*Ficha de control y seguimiento\*/);
   assert.match(texto, /Consulta anterior: .*2026: Dolor de cabeza/);
   assert.match(texto, /\*Evolución desde la consulta anterior\*\n- Evolución de los síntomas: Mejoró/);
+});
+
+test("motivoConEvolucion arma el motivo como lo escribe un médico", () => {
+  assert.equal(motivoConEvolucion("Fiebre", "5"), "Fiebre de 5 días de evolución");
+  assert.equal(motivoConEvolucion("Tos", 1), "Tos de 1 día de evolución");
+  assert.equal(motivoConEvolucion("Dolor de rodilla", 2, "semanas"), "Dolor de rodilla de 2 semanas de evolución");
+  assert.equal(motivoConEvolucion("Mareo", ""), "Mareo");
+  assert.equal(motivoConEvolucion("  ", 3), "");
+});
+
+test("la prioridad de preguntas usa campos que existen y empieza por el síntoma principal", () => {
+  const ids = new Set(CAMPOS.map((c) => c.id));
+  for (const id of PRIORIDAD) assert.ok(ids.has(id), id);
+  assert.ok(PRIORIDAD.indexOf("tomado") < PRIORIDAD.indexOf("sintomas"));
+  assert.ok(PRIORIDAD.indexOf("caracteristicas") < PRIORIDAD.indexOf("sintomas"));
+  assert.ok(PRIORIDAD.includes("contactos"));
 });

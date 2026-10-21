@@ -11,16 +11,19 @@ import {
   fichaVacia,
   lineaConsultaAnterior,
   MODOS,
+  MOTIVOS_FRECUENTES,
+  motivoConEvolucion,
   PREGUNTA_DE_CONTROL,
   RESPUESTAS_RAPIDAS,
   seccionesPara,
   tituloNumerado,
 } from "@/lib/ficha";
-import { borrarFichaGuardada, guardarFicha, leerFichaGuardada } from "@/lib/almacen";
+import { actualizarBase, borrarFichaGuardada, guardarFicha, leerFichaGuardada } from "@/lib/almacen";
 import { crearArchivoPdf, precargarPdf } from "@/lib/pdf";
 
 const PASOS = ["Cuéntanos", "Preguntas", "Tu ficha"];
 const DATOS_VACIOS = { nombre: "", edad: "", sexo: "", contacto: "" };
+const MOTIVO_VACIO = { eleccion: "", otro: "", cantidad: "", unidad: "dias" };
 const SEXOS = ["Femenino", "Masculino", "Prefiero no decir"];
 const SEGUNDOS_POR_RESPUESTA = 45;
 const MAX_BYTES_AUDIOS = 4 * 1024 * 1024;
@@ -122,6 +125,98 @@ function DatosGenerales({ datos, onChange }) {
   );
 }
 
+// "¿Por qué consultas hoy?": el síntoma principal con un toque y desde hace cuánto.
+// Así el motivo de consulta queda claro aunque el relato libre cuente muchas cosas.
+function MotivoDeConsulta({ motivo, onCambiar, deshabilitado }) {
+  const cambiar = (cambios) => onCambiar({ ...motivo, ...cambios });
+  const opciones = [...MOTIVOS_FRECUENTES, "Otro"];
+  const resumen = motivoConEvolucion(
+    motivo.eleccion === "Otro" ? motivo.otro : motivo.eleccion,
+    motivo.cantidad,
+    motivo.unidad
+  );
+  return (
+    <section className={tarjeta} aria-labelledby="motivo-titulo">
+      <h2 id="motivo-titulo" className="text-lg font-semibold">
+        ¿Por qué consultas hoy?
+      </h2>
+      <p className="mt-1 text-sm text-slate-600">
+        Elige lo que más te molesta, lo que te hizo buscar al médico. Lo demás lo cuentas después.
+      </p>
+      <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Motivo de consulta">
+        {opciones.map((opcion) => {
+          const elegida = motivo.eleccion === opcion;
+          return (
+            <button
+              key={opcion}
+              type="button"
+              aria-pressed={elegida}
+              disabled={deshabilitado}
+              onClick={() => cambiar({ eleccion: elegida ? "" : opcion })}
+              className={`min-h-11 rounded-full border px-4 text-sm font-medium transition focus:outline-none focus:ring-4 focus:ring-marca/25 ${
+                elegida ? "border-marca bg-marca text-white" : "border-borde bg-white text-tinta hover:bg-slate-50"
+              }`}
+            >
+              {opcion}
+            </button>
+          );
+        })}
+      </div>
+      {motivo.eleccion === "Otro" && (
+        <div className="mt-4">
+          <label htmlFor="motivo-otro" className={etiqueta}>
+            ¿Qué es lo que más te molesta?
+          </label>
+          <input
+            id="motivo-otro"
+            type="text"
+            maxLength={80}
+            value={motivo.otro}
+            onChange={(e) => cambiar({ otro: e.target.value })}
+            placeholder="Ejemplo: dolor en la rodilla"
+            className={campo}
+          />
+        </div>
+      )}
+      {motivo.eleccion && (
+        <div className="mt-4">
+          <label htmlFor="motivo-cantidad" className={etiqueta}>
+            ¿Desde hace cuánto?
+          </label>
+          <div className="mt-1 grid grid-cols-[6rem_1fr] gap-3">
+            <input
+              id="motivo-cantidad"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={99}
+              value={motivo.cantidad}
+              onChange={(e) => cambiar({ cantidad: e.target.value.slice(0, 2) })}
+              className={`${campo} mt-0`}
+              placeholder="3"
+            />
+            <select
+              aria-label="Unidad de tiempo"
+              value={motivo.unidad}
+              onChange={(e) => cambiar({ unidad: e.target.value })}
+              className={`${campo} mt-0`}
+            >
+              <option value="dias">días</option>
+              <option value="semanas">semanas</option>
+              <option value="meses">meses</option>
+            </select>
+          </div>
+          {resumen && (
+            <p className="mt-3 text-sm text-slate-600">
+              En tu ficha dirá: <strong className="font-semibold text-tinta">{resumen}</strong>
+            </p>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
 // Selector de "Primera vez" o "Consulta de control". Cada opción explica qué cambia.
 function SelectorDeModo({ modo, onElegir, deshabilitado }) {
   const opciones = [
@@ -168,27 +263,95 @@ function SelectorDeModo({ modo, onElegir, deshabilitado }) {
 }
 
 // Lo que se recuerda de la consulta anterior, para que el paciente sepa qué se va a usar.
-function FichaGuardada({ registro, onBorrar }) {
+// Si cambió algún antecedente (por ejemplo, un medicamento nuevo), se edita aquí
+// sin borrar el historial de consultas.
+function FichaGuardada({ registro, onBorrar, onCambiarBase }) {
   const filas = [
-    ["Enfermedades", registro.base.enfermedades],
-    ["Alergias", registro.base.alergias],
-    ["Medicamentos", registro.base.medicamentos],
+    ["enfermedades", "Enfermedades"],
+    ["alergias", "Alergias"],
+    ["medicamentos", "Medicamentos"],
   ];
+  const [editando, setEditando] = useState(false);
+  const [borrador, setBorrador] = useState(registro.base);
+  const [aviso, setAviso] = useState("");
   const visitas = [...registro.historial].reverse(); // la más reciente primero
+
+  function empezarEdicion() {
+    setBorrador(registro.base);
+    setAviso("");
+    setEditando(true);
+  }
+
+  function guardarCambios() {
+    const ok = onCambiarBase(borrador);
+    setAviso(ok ? "Cambios guardados. Tu historial sigue igual." : "No pudimos guardar los cambios en este teléfono.");
+    if (ok) setEditando(false);
+  }
+
   return (
     <section className={tarjeta}>
-      <h2 className="text-lg font-semibold">Tu ficha guardada</h2>
-      <p className="mt-1 text-sm text-slate-600">
-        Guardada en este teléfono. La usaremos para no empezar de cero.
-      </p>
-      <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-        {filas.map(([nombre, valor]) => (
-          <div key={nombre} className="contents">
-            <dt className="font-medium text-slate-500">{nombre}</dt>
-            <dd className={valor ? "text-slate-900" : "italic text-slate-400"}>{valor || "No registrado"}</dd>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold">Tu ficha guardada</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Guardada en este teléfono. La usaremos para no empezar de cero.
+          </p>
+        </div>
+        {!editando && (
+          <button type="button" onClick={empezarEdicion} className={`${botonChico} shrink-0`}>
+            Editar
+          </button>
+        )}
+      </div>
+
+      {editando ? (
+        <div className="mt-3 flex flex-col gap-3">
+          <p className="text-sm text-slate-600">¿Cambió algo desde tu última consulta? Corrígelo aquí.</p>
+          {filas.map(([id, nombre]) => (
+            <div key={id}>
+              <label htmlFor={`base-${id}`} className={etiqueta}>
+                {nombre}
+              </label>
+              <input
+                id={`base-${id}`}
+                type="text"
+                maxLength={300}
+                value={borrador[id] ?? ""}
+                onChange={(e) => setBorrador((b) => ({ ...b, [id]: e.target.value }))}
+                placeholder="Escribe o deja vacío"
+                className={campo}
+              />
+            </div>
+          ))}
+          <div className="flex gap-3">
+            <button type="button" onClick={guardarCambios} className={botonPrincipal}>
+              Guardar cambios
+            </button>
+            <button type="button" onClick={() => setEditando(false)} className={botonSecundario}>
+              Cancelar
+            </button>
           </div>
-        ))}
-      </dl>
+        </div>
+      ) : (
+        <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+          {filas.map(([id, nombre]) => {
+            const valor = registro.base[id];
+            return (
+              <div key={id} className="contents">
+                <dt className="font-medium text-slate-500">{nombre}</dt>
+                <dd className={valor ? "text-slate-900" : "italic text-slate-400"} data-base={id}>
+                  {valor || "No registrado"}
+                </dd>
+              </div>
+            );
+          })}
+        </dl>
+      )}
+      {aviso && (
+        <p className="mt-3 text-sm font-medium text-teal-800" role="status">
+          {aviso}
+        </p>
+      )}
 
       <h3 className="mt-5 text-sm font-semibold text-slate-700">
         Historial de consultas ({visitas.length})
@@ -343,6 +506,7 @@ export default function Home() {
   const [estadoGuardado, setEstadoGuardado] = useState(""); // "", "guardada", "borrada", "error"
   const [datos, setDatos] = useState(DATOS_VACIOS);
   const [texto, setTexto] = useState("");
+  const [motivo, setMotivo] = useState(MOTIVO_VACIO);
   const [audio, setAudio] = useState(null);
   const [transcripcion, setTranscripcion] = useState("");
   const [preguntas, setPreguntas] = useState([]); // ronda actual: [{ campo, pregunta }]
@@ -369,6 +533,13 @@ export default function Home() {
   }, []);
 
   const anterior = modo === "control" ? guardada?.anterior ?? null : null;
+
+  // El motivo elegido con un toque ("Fiebre de 5 días de evolución"). Manda sobre lo que la IA
+  // resuma del relato, en todas las rondas, porque es lo que el paciente dijo que lo trae hoy.
+  const motivoElegido =
+    modo === "primera"
+      ? motivoConEvolucion(motivo.eleccion === "Otro" ? motivo.otro : motivo.eleccion, motivo.cantidad, motivo.unidad)
+      : "";
 
   // El generador de PDF se descarga al llegar a la ficha, para que el botón responda al instante.
   useEffect(() => {
@@ -408,6 +579,12 @@ export default function Home() {
     borrarFichaGuardada();
     setGuardada(null);
     setEstadoGuardado("borrada");
+  }
+
+  function cambiarBase(cambios) {
+    const registro = actualizarBase(cambios);
+    if (registro) setGuardada(registro);
+    return Boolean(registro);
   }
 
   function guardarEnTelefono() {
@@ -457,16 +634,18 @@ export default function Home() {
   }
 
   async function analizar() {
-    if (!audio && !texto.trim()) {
-      setError("Graba un audio o escribe qué te sucede para continuar.");
+    if (!audio && !texto.trim() && !motivoElegido) {
+      setError("Elige por qué consultas, graba un audio o escribe qué te sucede para continuar.");
       return;
     }
     setCargando(true);
     setError("");
     try {
-      const r = await pedirFicha({ paso: "analizar", texto, audio: audio?.blob, yaPreguntados: "[]" });
-      // En control, lo guardado en el teléfono completa lo que la IA no haya copiado.
+      const r = await pedirFicha({ paso: "analizar", texto, audio: audio?.blob, motivoElegido, yaPreguntados: "[]" });
+      // El motivo que eligió el paciente manda sobre lo que la IA haya resumido del relato.
       const nueva = { ...r.ficha };
+      if (motivoElegido) nueva.motivo = motivoElegido;
+      // En control, lo guardado en el teléfono completa lo que la IA no haya copiado.
       if (modo === "control" && guardada) {
         for (const [id, valor] of Object.entries(guardada.base)) nueva[id] ||= valor;
       }
@@ -530,6 +709,7 @@ export default function Home() {
       });
       const r = await pedirFicha(campos);
       const nueva = aplicarRespuestas(r.ficha, todas);
+      if (motivoElegido) nueva.motivo = motivoElegido;
       if (r.alarma) setAlarma(r.alarma);
       setRespondidas(todas);
       if (r.preguntas.length > 0 && ronda < MAX_RONDAS) {
@@ -631,6 +811,7 @@ export default function Home() {
     setEstadoGuardado("");
     setDatos(DATOS_VACIOS);
     setTexto("");
+    setMotivo(MOTIVO_VACIO);
     setAudio(null);
     setTranscripcion("");
     setPreguntas([]);
@@ -739,7 +920,7 @@ export default function Home() {
           <>
             <SelectorDeModo modo={modo} onElegir={elegirModo} deshabilitado={cargando} />
 
-            {esControl && guardada && <FichaGuardada registro={guardada} onBorrar={borrarGuardada} />}
+            {esControl && guardada && <FichaGuardada registro={guardada} onBorrar={borrarGuardada} onCambiarBase={cambiarBase} />}
             {esControl && !guardada && (
               <p className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
                 {estadoGuardado === "borrada"
@@ -754,9 +935,11 @@ export default function Home() {
               <DatosGenerales datos={datos} onChange={cambiarDato} />
             </section>
 
+            {!esControl && <MotivoDeConsulta motivo={motivo} onCambiar={setMotivo} deshabilitado={cargando} />}
+
             <section className={tarjeta}>
               <h2 className="text-lg font-semibold">
-                {esControl ? PREGUNTA_DE_CONTROL : "Cuéntanos qué te sucede"}
+                {esControl ? PREGUNTA_DE_CONTROL : motivo.eleccion ? "Ahora cuéntanos qué pasó" : "Cuéntanos qué te sucede"}
               </h2>
               <p className="mt-1 mb-4 text-sm text-slate-600">
                 {esControl

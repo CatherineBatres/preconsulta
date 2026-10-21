@@ -12,6 +12,7 @@ El navegador envía `multipart/form-data`, así el audio viaja como archivo bina
 | `base` | `control` | La ficha base guardada, en JSON: `{ enfermedades, alergias, medicamentos, anterior: { fecha, motivo }, historial: [hasta 3 consultas] }` |
 | `yaPreguntados` | siempre | Lista JSON de los campos que ya se preguntaron, para no repetirlos |
 | `texto` | `analizar` | El relato escrito, hasta 4,000 caracteres |
+| `motivoElegido` | `analizar` | El motivo que el paciente eligió con un toque, ya armado (por ejemplo `Fiebre de 5 días de evolución`). Opcional; si viene, la IA lo copia tal cual y centra las preguntas en ese síntoma |
 | `audio` | `analizar` | El relato grabado (webm, mp4, ogg…) |
 | `ficha` | `completar` | La ficha actual, en JSON |
 | `respuestas` | `completar` | Lista JSON de `{ campo, pregunta, respuesta }` |
@@ -66,14 +67,14 @@ const interaccion = await ia.interactions.create({
 const salida = JSON.parse(interaccion.output_text);
 ```
 
-`ESQUEMA` es un esquema JSON armado a partir de `lib/ficha.js` con cuatro campos: `transcripcion`, `alarma`, `ficha` (15 campos de texto) y `preguntas` (hasta 5 `{ campo, pregunta }`, donde `campo` debe ser uno de los campos de la ficha). Pedir un esquema en vez de texto libre es lo que hace que cada ficha regrese con las mismas secciones, en el mismo orden, y ligar cada pregunta a un campo es lo que permite seguir preguntando hasta completar la ficha.
+`ESQUEMA` es un esquema JSON armado a partir de `lib/ficha.js` con cuatro campos: `transcripcion`, `alarma`, `ficha` (18 campos de texto) y `preguntas` (hasta 5 `{ campo, pregunta }`, donde `campo` debe ser uno de los campos de la ficha). Pedir un esquema en vez de texto libre es lo que hace que cada ficha regrese con las mismas secciones, en el mismo orden, y ligar cada pregunta a un campo es lo que permite seguir preguntando hasta completar la ficha.
 
 ## 3. APIs del navegador
 
 | API | Para qué |
 | --- | --- |
 | `navigator.mediaDevices.getUserMedia` + `MediaRecorder` | Grabar los audios |
-| `SpeechRecognition` / `webkitSpeechRecognition` (Web Speech API) | Mostrar las palabras en vivo mientras el paciente habla |
+| `SpeechRecognition` / `webkitSpeechRecognition` (Web Speech API) | Mostrar las palabras en vivo mientras el paciente habla (solo en computadora) |
 | `navigator.share({ files: [pdf] })` (Web Share API) | Abrir el menú de compartir del teléfono con el PDF adjunto; si no está disponible, se descarga |
 | `https://wa.me/?text=…` | Enviar la ficha como texto por WhatsApp (el paciente elige el contacto) |
 | `mailto:?subject=…&body=…` | Enviar la ficha por correo |

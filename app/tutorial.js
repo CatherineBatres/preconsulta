@@ -33,7 +33,7 @@ const PANTALLAS = [
     icono: "microfono",
     titulo: "Habla o escribe, como prefieras",
     texto:
-      "Presiona Grabar y cuéntalo como en la consulta. Verás el texto mientras hablas, y al terminar puedes escucharte o grabar de nuevo. Si no puedes hablar, escríbelo.",
+      "Presiona Grabar y cuéntalo como en la consulta. Al terminar puedes escucharte y grabar de nuevo. Si no puedes hablar, escríbelo.",
   },
   {
     icono: "preguntas",

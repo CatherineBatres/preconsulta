@@ -2,6 +2,32 @@
 
 Registro de las decisiones del proyecto: qué se decidió, por qué y qué se descartó. Las más recientes van primero.
 
+## 8. Sin transcripción en vivo en teléfonos (20 de octubre de 2026)
+
+**Contexto.** En la revisión del 14 de octubre se señaló un riesgo (Issue #2): en Android Chrome y en iPhone Safari, usar el reconocimiento de voz del navegador al mismo tiempo que la grabación puede cortar o silenciar el audio, porque los dos usan el micrófono. Ese audio es lo que la IA usa para armar la ficha.
+
+**Decisión.** En teléfonos la app solo graba: no muestra el texto mientras se habla, y en su lugar dice "Te estamos escuchando". En computadora la transcripción en vivo sigue igual. El paciente puede escuchar su grabación y repetirla en los dos casos.
+
+**Por qué.** Lo importante es que el audio llegue completo a Gemini; el texto en vivo era solo una guía. Casi todos los pacientes van a usar la app desde el teléfono, así que ahí no vale la pena el riesgo.
+
+**Qué se descartó.** Detectar si el audio salió cortado y avisar después (complica la app y el paciente tendría que repetir), y apagar la transcripción en todos lados (en computadora funciona bien).
+
+**Cómo se verifica.** Grabar una consulta de control de 30 segundos desde un teléfono real con Gemini y revisar que la ficha salga completa.
+
+## 7. El motivo de consulta se elige con un toque, antes del relato (19 de octubre de 2026)
+
+**Contexto.** En el feedback, el Paciente 2 (con formación en medicina) explicó que en el relato libre el paciente "divaga": cuenta todo desde el lunes, pero no queda claro qué lo hizo consultar hoy. Si la ficha dice "tos" y el paciente viene por la fiebre, el médico arranca con información equivocada.
+
+**Decisión.**
+- En primera vez, antes del relato, la pantalla pregunta "¿Por qué consultas hoy?" con botones (Fiebre, Tos, Dolor de garganta, Dolor de cabeza, Dolor de estómago, Diarrea, Vómitos, Mareo, Otro) y "¿Desde hace cuánto?". La ficha dice, por ejemplo, "Fiebre de 5 días de evolución".
+- Ese motivo lo arma la app, no la IA, y ninguna ronda de preguntas lo puede cambiar.
+- Las preguntas siguen el orden de un interrogatorio médico: primero el síntoma principal (qué ha tomado para eso, cómo es, qué tan fuerte del 1 al 10 y con su medida propia, qué lo mejora o empeora), después los síntomas asociados y al final los antecedentes.
+- Se agregaron tres datos a la ficha: "Cómo es", "Lo que ha tomado para esto" y "Personas cercanas con síntomas parecidos". Si hay diarrea o vómitos, se pregunta cuántas veces y si está tomando líquidos.
+
+**Por qué.** Elegir de una lista evita que el motivo se pierda en el relato, y el relato libre se conserva porque da el contexto general. Es opcional: quien no encuentra su motivo en la lista puede escribirlo en "Otro" o solo contar su historia.
+
+**Qué se descartó.** Quitar el relato libre (el mismo médico dijo que sirve) y una lista larga de síntomas (cansa y no cabe en el teléfono).
+
 ## 6. La grabación no se guarda (14 de octubre de 2026)
 
 **Contexto.** El paciente graba su relato y sus respuestas. Mientras habla ve la transcripción en vivo y al detener puede volver a escuchar. Había que decidir si vale la pena guardar la grabación después de enviarla.

@@ -32,7 +32,7 @@ test("primera vez: preguntas en rondas hasta llenar la ficha, PDF y guardado en 
 
   // Paso 1: no deja continuar sin relato
   await page.getByRole("button", { name: "Continuar" }).click();
-  await expect(page.getByText("Graba un audio o escribe qué te sucede")).toBeVisible();
+  await expect(page.getByText("Elige por qué consultas, graba un audio o escribe qué te sucede")).toBeVisible();
 
   await expect(page.getByRole("button", { name: /Primera vez/ })).toHaveAttribute("aria-pressed", "true");
   await page.locator("#nombre").fill("María López");
@@ -90,6 +90,25 @@ test("primera vez: preguntas en rondas hasta llenar la ficha, PDF y guardado en 
   expect(guardado.base).toEqual({ enfermedades: "Hipertensión arterial", alergias: "", medicamentos: "" });
   expect(guardado.historial).toHaveLength(1);
   expect(guardado.historial[0]).toMatchObject({ modo: "primera", motivo: "Dolor de cabeza por las tardes desde hace tres días" });
+});
+
+test("el motivo elegido con un toque queda como motivo de consulta con su tiempo de evolución", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Fiebre", exact: true }).click();
+  await page.locator("#motivo-cantidad").fill("5");
+  await expect(page.getByText("En tu ficha dirá:")).toContainText("Fiebre de 5 días de evolución");
+  await expect(page.getByRole("heading", { name: "Ahora cuéntanos qué pasó" })).toBeVisible();
+  await page.locator("#texto").fill("Empecé el lunes con diarrea y luego me dio fiebre en las noches.");
+
+  const peticion = page.waitForRequest("**/api/ficha");
+  await page.getByRole("button", { name: "Continuar" }).click();
+  expect((await peticion).postData()).toContain("Fiebre de 5 días de evolución");
+
+  // Se responde todo con "No sé" para llegar rápido a la ficha.
+  for (let i = 0; i < 5; i++) await page.getByRole("button", { name: "No sé" }).click();
+  await expect(page.getByRole("heading", { name: "Envíala a tu médico" })).toBeVisible();
+  await expect(page.locator("#ficha-motivo")).toHaveValue("Fiebre de 5 días de evolución");
+  await expect(page.locator("#ficha-contactos")).toBeVisible();
 });
 
 test("consulta de control: retoma la ficha guardada y pregunta por la evolución", async ({ page }) => {
@@ -152,6 +171,48 @@ test("consulta de control: retoma la ficha guardada y pregunta por la evolución
   await expect(page.locator("[data-historial] li").first()).toContainText("Evolución: El dolor bajó");
 });
 
+test("en control se pueden editar los antecedentes sin borrar el historial", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate((clave) => {
+    localStorage.setItem(
+      clave,
+      JSON.stringify({
+        version: 2,
+        guardada: "2026-10-11T18:00:00.000Z",
+        datos: { nombre: "", edad: "50", sexo: "Masculino", contacto: "" },
+        base: { enfermedades: "Hipertensión arterial", alergias: "", medicamentos: "Losartán 50 mg" },
+        historial: [
+          { fecha: "2026-10-01T18:00:00.000Z", modo: "primera", motivo: "Dolor de cabeza", evolucion: "", tratamiento: "" },
+          { fecha: "2026-10-11T18:00:00.000Z", modo: "control", motivo: "Control", evolucion: "Mejoró", tratamiento: "" },
+        ],
+      })
+    );
+  }, CLAVE_GUARDADO);
+
+  await page.getByRole("button", { name: /Control o seguimiento/ }).click();
+  await page.getByRole("button", { name: "Editar" }).click();
+  await page.locator("#base-medicamentos").fill("Losartán 50 mg y metformina 850 mg");
+  await page.locator("#base-alergias").fill("Penicilina");
+  await page.getByRole("button", { name: "Guardar cambios" }).click();
+
+  await expect(page.getByText("Cambios guardados. Tu historial sigue igual.")).toBeVisible();
+  await expect(page.locator('[data-base="medicamentos"]')).toHaveText("Losartán 50 mg y metformina 850 mg");
+  await expect(page.getByRole("heading", { name: "Historial de consultas (2)" })).toBeVisible();
+  const guardado = await page.evaluate((clave) => JSON.parse(localStorage.getItem(clave)), CLAVE_GUARDADO);
+  expect(guardado.base).toEqual({
+    enfermedades: "Hipertensión arterial",
+    alergias: "Penicilina",
+    medicamentos: "Losartán 50 mg y metformina 850 mg",
+  });
+  expect(guardado.historial).toHaveLength(2);
+
+  // La consulta usa los antecedentes nuevos
+  await page.locator("#texto").fill("Sigo mejor, ya casi no me duele.");
+  const peticion = page.waitForRequest("**/api/ficha");
+  await page.getByRole("button", { name: "Continuar" }).click();
+  expect((await peticion).postData()).toContain("metformina 850 mg");
+});
+
 test("se puede borrar la ficha guardada", async ({ page }) => {
   await page.goto("/");
   await page.evaluate((clave) => {
@@ -191,6 +252,7 @@ test("explica el error cuando la IA llega a su límite de uso", async ({ page })
 function reconocimientoFalso() {
   class ReconocimientoFalso {
     start() {
+      window.reconocimientoIniciado = true;
       this.temporizadores = [
         setTimeout(() => this.emitir(false, "me duele"), 150),
         setTimeout(() => this.emitir(true, "Me duele la cabeza"), 300),
@@ -216,42 +278,65 @@ function reconocimientoFalso() {
   window.SpeechRecognition = ReconocimientoFalso;
 }
 
-test("transcribe en vivo, deja volver a escuchar y grabar de nuevo", async ({ page }) => {
-  await page.addInitScript(reconocimientoFalso);
-  await page.goto("/");
+// La transcripción en vivo solo se activa en computadora (decisión 8): aquí se simula una.
+test.describe("en computadora", () => {
+  test.use({
+    userAgent:
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    isMobile: false,
+    hasTouch: false,
+    viewport: { width: 1280, height: 800 },
+  });
 
-  await page.getByRole("button", { name: "Grabar" }).click();
-  const enVivo = page.locator("[data-transcripcion-en-vivo]");
-  await expect(enVivo).toContainText("Me duele la cabeza");
-  await expect(enVivo).toContainText("desde hace");
-  await page.getByRole("button", { name: "Detener" }).click();
+  test("transcribe en vivo, deja volver a escuchar y grabar de nuevo", async ({ page }) => {
+    await page.addInitScript(reconocimientoFalso);
+    await page.goto("/");
 
-  await expect(page.getByText("Escucha tu grabación")).toBeVisible();
-  await expect(page.locator("audio")).toBeVisible();
-  await expect(page.locator("[data-transcripcion]")).toHaveText("Me duele la cabeza desde hace tres días");
+    await page.getByRole("button", { name: "Grabar" }).click();
+    const enVivo = page.locator("[data-transcripcion-en-vivo]");
+    await expect(enVivo).toContainText("Me duele la cabeza");
+    await expect(enVivo).toContainText("desde hace");
+    await page.getByRole("button", { name: "Detener" }).click();
 
-  await page.getByRole("button", { name: "Grabar de nuevo" }).click();
-  await expect(page.getByRole("button", { name: "Detener" })).toBeVisible();
-  await expect(page.locator("audio")).toHaveCount(0);
-  await expect(enVivo).toContainText("Me duele la cabeza");
-  await page.getByRole("button", { name: "Detener" }).click();
-  await expect(page.locator("[data-transcripcion]")).toHaveText("Me duele la cabeza desde hace tres días");
+    await expect(page.getByText("Escucha tu grabación")).toBeVisible();
+    await expect(page.locator("audio")).toBeVisible();
+    await expect(page.locator("[data-transcripcion]")).toHaveText("Me duele la cabeza desde hace tres días");
 
-  await page.getByRole("button", { name: "Borrar", exact: true }).click();
-  await expect(page.locator("audio")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Grabar" })).toBeVisible();
+    await page.getByRole("button", { name: "Grabar de nuevo" }).click();
+    await expect(page.getByRole("button", { name: "Detener" })).toBeVisible();
+    await expect(page.locator("audio")).toHaveCount(0);
+    await expect(enVivo).toContainText("Me duele la cabeza");
+    await page.getByRole("button", { name: "Detener" }).click();
+    await expect(page.locator("[data-transcripcion]")).toHaveText("Me duele la cabeza desde hace tres días");
+
+    await page.getByRole("button", { name: "Borrar", exact: true }).click();
+    await expect(page.locator("audio")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Grabar" })).toBeVisible();
+  });
+
+  test("sin reconocimiento de voz en el navegador, igual graba y avisa", async ({ page }) => {
+    await page.addInitScript(() => {
+      delete window.SpeechRecognition;
+      delete window.webkitSpeechRecognition;
+    });
+    await page.goto("/");
+    await page.getByRole("button", { name: "Grabar" }).click();
+    await expect(page.getByText("Este navegador no muestra el texto mientras hablas")).toBeVisible();
+    await page.waitForTimeout(800);
+    await page.getByRole("button", { name: "Detener" }).click();
+    await expect(page.locator("audio")).toBeVisible();
+    await expect(page.locator("[data-transcripcion]")).toHaveCount(0);
+  });
 });
 
-test("sin reconocimiento de voz en el navegador, igual graba y avisa", async ({ page }) => {
-  await page.addInitScript(() => {
-    delete window.SpeechRecognition;
-    delete window.webkitSpeechRecognition;
-  });
+test("en el teléfono no usa el reconocimiento de voz, para no cortar la grabación", async ({ page }) => {
+  await page.addInitScript(reconocimientoFalso); // aunque el navegador lo tenga
   await page.goto("/");
   await page.getByRole("button", { name: "Grabar" }).click();
-  await expect(page.getByText("Este navegador no muestra el texto mientras hablas")).toBeVisible();
+  await expect(page.getByText("Te estamos escuchando")).toBeVisible();
   await page.waitForTimeout(800);
   await page.getByRole("button", { name: "Detener" }).click();
   await expect(page.locator("audio")).toBeVisible();
+  expect(await page.evaluate(() => window.reconocimientoIniciado ?? false)).toBe(false);
   await expect(page.locator("[data-transcripcion]")).toHaveCount(0);
 });

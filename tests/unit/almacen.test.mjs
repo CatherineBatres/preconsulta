@@ -2,7 +2,7 @@
 import { beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { fichaVacia } from "../../lib/ficha.js";
-import { borrarFichaGuardada, guardarFicha, leerFichaGuardada } from "../../lib/almacen.js";
+import { actualizarBase, borrarFichaGuardada, guardarFicha, leerFichaGuardada } from "../../lib/almacen.js";
 
 function localStorageFalso() {
   const datos = new Map();
@@ -92,4 +92,19 @@ test("convierte lo guardado con la versión anterior sin perderlo", () => {
   assert.equal(registro.anterior.motivo, "Dolor de cabeza");
   guardarFicha(registro.datos, { ...fichaVacia(), motivo: "Control" }, "control");
   assert.equal(leerFichaGuardada().historial.length, 2);
+});
+
+test("actualizarBase cambia los antecedentes y conserva el historial", () => {
+  const ficha = { ...fichaVacia(), motivo: "Tos", medicamentos: "Losartán" };
+  guardarFicha({ nombre: "", edad: "", sexo: "", contacto: "" }, ficha);
+  guardarFicha({ nombre: "", edad: "", sexo: "", contacto: "" }, { ...ficha, motivo: "Control de tos" }, "control");
+  const registro = actualizarBase({ medicamentos: "  Losartán y metformina ", alergias: "No sabe" });
+  assert.equal(registro.base.medicamentos, "Losartán y metformina");
+  assert.equal(registro.base.alergias, ""); // "No sabe" no se guarda
+  assert.equal(leerFichaGuardada().historial.length, 2);
+  assert.equal(leerFichaGuardada().anterior.motivo, "Control de tos");
+});
+
+test("actualizarBase sin ficha guardada devuelve null", () => {
+  assert.equal(actualizarBase({ medicamentos: "X" }), null);
 });

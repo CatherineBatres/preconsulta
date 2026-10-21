@@ -25,6 +25,15 @@ Campo "preguntas": la meta es que la ficha quede completa. Escribe una pregunta 
 
 En el PASO completar, parte de la ficha actual y agrega o corrige con las respuestas del paciente; conserva lo que ya estaba.
 
+Motivo elegido: si se te da un "Motivo de consulta elegido por el paciente", cópialo tal cual en "motivo" y usa su tiempo para "duracion". Ese es el síntoma principal, aunque el relato hable de muchas cosas.
+
+Orden de las preguntas (como en un interrogatorio médico):
+1. Primero profundiza en el síntoma principal, el que lo hizo consultar hoy: cuándo empezó, qué ha tomado para eso, cómo es (tipo, color, si es de día o de noche, si se extiende a otra parte), qué tan fuerte es y qué lo mejora o empeora.
+2. Después pregunta por los síntomas asociados, sin profundizar en cada uno.
+3. Al final, antecedentes, personas cercanas con síntomas parecidos, hábitos y dudas.
+- Pide medidas concretas: para la intensidad, una escala del 1 al 10 y la medida propia del síntoma (cuántos grados de fiebre, cuántas veces ha vomitado o ido al baño).
+- Si hay diarrea o vómitos, pregunta en "intensidad" cuántas veces y si está tomando agua o suero.
+
 MODO primera: es la primera vez que el paciente usa la app. Deja "evolucion" y "tratamiento" vacíos y no preguntes por ellos.
 
 MODO control: el paciente vuelve después de una consulta anterior y respondió primero a la pregunta "¿Cómo evolucionaron tus síntomas desde la consulta anterior y cómo te fue con el tratamiento?".
@@ -103,6 +112,7 @@ export async function POST(request) {
   const edad = String(formulario.get("edad") || "").slice(0, 3);
   const sexo = String(formulario.get("sexo") || "").slice(0, 30);
   const texto = String(formulario.get("texto") || "").slice(0, MAX_TEXTO).trim();
+  const motivoElegido = String(formulario.get("motivoElegido") || "").slice(0, 200).trim();
   const permitidos = new Set(camposPreguntables(modo));
   const yaPreguntados = (() => {
     const lista = leerJson(formulario.get("yaPreguntados"), []);
@@ -171,7 +181,8 @@ export async function POST(request) {
   lineas.push(`Campos ya preguntados (no volver a preguntar): ${yaPreguntados.join(", ") || "ninguno"}`);
 
   if (paso === "analizar") {
-    if (!hayAudio && !texto) {
+    if (motivoElegido) lineas.push(`Motivo de consulta elegido por el paciente: ${JSON.stringify(motivoElegido)}`);
+    if (!hayAudio && !texto && !motivoElegido) {
       return error("Graba un audio o escribe qué te sucede.", 400);
     }
     lineas.push(`Relato escrito por el paciente: ${texto ? JSON.stringify(texto) : "ninguno"}`);

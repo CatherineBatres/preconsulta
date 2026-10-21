@@ -1,12 +1,21 @@
 # Pruebas
 
-**Pruebas unitarias** (22): revisan los ayudantes de la ficha, las reglas de las preguntas, la ficha guardada y el historial, con el ejecutor de pruebas que trae Node. No necesitan navegador ni llave:
+**Pruebas unitarias** (26): revisan los ayudantes de la ficha (incluido el motivo con su tiempo de evolución), las reglas de las preguntas, la ficha guardada, la edición de antecedentes y el historial, con el ejecutor de pruebas que trae Node. No necesitan navegador ni llave:
 
 ```bash
 npm test
 ```
 
-**Pruebas de punta a punta** (7): abren la app real en un Chrome del tamaño de un teléfono, con un micrófono simulado, y recorren: una primera vez con dos rondas de preguntas, las respuestas rápidas y la marca "Sin respuesta", el PDF y el guardado en el teléfono; un control que carga la ficha guardada, pregunta por la evolución y suma la visita al historial; el borrado de la ficha guardada; la transcripción en vivo, volver a escuchar y grabar de nuevo (con un reconocimiento de voz simulado); la grabación en un navegador sin reconocimiento de voz; el aviso de alarma; y el mensaje de error cuando la IA llega a su límite.
+**Pruebas de punta a punta** (12): abren la app real en un Chrome del tamaño de un teléfono, con un micrófono simulado, y recorren:
+- una primera vez con dos rondas de preguntas, las respuestas rápidas y la marca "Sin respuesta", el PDF y el guardado en el teléfono;
+- el motivo elegido con un toque ("Fiebre de 5 días de evolución"), que ninguna ronda de la IA puede cambiar;
+- un control que carga la ficha guardada, pregunta por la evolución y suma la visita al historial;
+- la edición de antecedentes en control sin perder el historial;
+- el borrado de la ficha guardada;
+- en el teléfono, que la grabación no use el reconocimiento de voz;
+- en computadora, la transcripción en vivo, volver a escuchar y grabar de nuevo (con un reconocimiento de voz simulado), y la grabación en un navegador sin reconocimiento de voz;
+- el aviso de alarma y el mensaje de error cuando la IA llega a su límite;
+- el tutorial de bienvenida (dos pruebas).
 
 Nunca llaman a Google: `tests/gemini-falso.mjs` es un servidor pequeño que imita la API de Gemini, y Playwright apunta la app hacia él con `GOOGLE_GEMINI_BASE_URL`. La primera vez, instala el navegador de pruebas:
 
@@ -15,6 +24,6 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-El comando compila la app, levanta la IA simulada en el puerto 3222 y la app en el 3100, y corre `tests/e2e/preconsulta.spec.mjs` (flujo completo) y `tests/e2e/tutorial.spec.mjs` (tutorial de bienvenida). Son 9 pruebas. En `preconsulta.spec.mjs` el tutorial se marca como visto antes de cada prueba para que no tape la pantalla.
+El comando compila la app, levanta la IA simulada en el puerto 3222 y la app en el 3100, y corre `tests/e2e/preconsulta.spec.mjs` (flujo completo) y `tests/e2e/tutorial.spec.mjs` (tutorial de bienvenida). En `preconsulta.spec.mjs` el tutorial se marca como visto antes de cada prueba para que no tape la pantalla.
 
 Ver también: [Volver al README](../README.es.md)

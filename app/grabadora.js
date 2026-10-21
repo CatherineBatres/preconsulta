@@ -7,8 +7,18 @@ const MAX_SEGUNDOS = 120;
 
 // Transcripción en vivo con el reconocimiento de voz del navegador (Chrome, Edge, Safari).
 // Es solo una guía para el paciente: la IA siempre trabaja con el audio grabado.
-// Si en algún teléfono choca con la grabación, se puede apagar aquí.
+// En teléfonos se apaga: el reconocimiento de voz y la grabación usan el mismo micrófono,
+// y en Android y iPhone eso puede cortar o silenciar el audio que se envía a la IA.
+// Ver decisión 8 en docs/decisiones.md.
 const TRANSCRIPCION_EN_VIVO = true;
+
+export function esTelefono() {
+  if (typeof navigator === "undefined") return false;
+  if (navigator.userAgentData?.mobile) return true;
+  const ua = navigator.userAgent || "";
+  if (/Android|iPhone|iPad|iPod|Mobile/i.test(ua)) return true;
+  return /Macintosh/.test(ua) && navigator.maxTouchPoints > 1; // iPad que se presenta como Mac
+}
 const IDIOMA = "es-GT";
 
 function duracionEnPalabras(segundos) {
@@ -25,7 +35,7 @@ export function mmss(segundos) {
 }
 
 function crearReconocedor() {
-  if (!TRANSCRIPCION_EN_VIVO || typeof window === "undefined") return null;
+  if (!TRANSCRIPCION_EN_VIVO || typeof window === "undefined" || esTelefono()) return null;
   const Reconocimiento = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!Reconocimiento) return null;
   const reconocedor = new Reconocimiento();
@@ -73,7 +83,7 @@ export default function Grabadora({
     const sesion = sesionRef.current;
     const reconocedor = crearReconocedor();
     if (!reconocedor) {
-      setEstadoVivo(TRANSCRIPCION_EN_VIVO ? "no-disponible" : "");
+      setEstadoVivo(!TRANSCRIPCION_EN_VIVO ? "" : esTelefono() ? "telefono" : "no-disponible");
       return;
     }
     reconocedor.onresult = (e) => {
@@ -253,9 +263,15 @@ export default function Grabadora({
 
           {grabando && (
             <div className="mt-4 rounded-lg border border-slate-200 bg-white px-3 py-2.5">
-              <p className="text-xs font-medium text-slate-500">Transcripción en vivo</p>
+              <p className="text-xs font-medium text-slate-500">
+                {estadoVivo === "telefono" ? "Grabando" : "Transcripción en vivo"}
+              </p>
               <p className="mt-1 min-h-12 text-base text-slate-900" aria-live="polite" data-transcripcion-en-vivo>
-                {estadoVivo === "no-disponible" ? (
+                {estadoVivo === "telefono" ? (
+                  <span className="text-sm text-slate-500">
+                    Te estamos escuchando. Al terminar podrás oír tu grabación y repetirla si quieres.
+                  </span>
+                ) : estadoVivo === "no-disponible" ? (
                   <span className="text-sm text-slate-500">
                     Este navegador no muestra el texto mientras hablas, pero tu audio se graba igual.
                   </span>

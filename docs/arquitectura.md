@@ -9,7 +9,7 @@
 | Pantallas (`app/page.js`) | Navegador del paciente | La app se abre con un enlace en cualquier teléfono, sin instalar nada |
 | Tutorial (`app/tutorial.js`) | Navegador del paciente | Aparece solo la primera vez (se recuerda en `localStorage`, clave `preconsulta.tutorialVisto`) y se vuelve a abrir con "¿Cómo funciona?" |
 | Grabadora (`app/grabadora.js`) | Navegador del paciente | El navegador ya trae una API de micrófono (`MediaRecorder`) |
-| Transcripción en vivo | Reconocimiento de voz del navegador (Chrome lo envía a Google, Safari a Apple) | Gratis e inmediata; solo guía al paciente, la IA siempre trabaja con el audio grabado |
+| Transcripción en vivo (solo computadora) | Reconocimiento de voz del navegador (Chrome lo envía a Google, Safari a Apple) | Gratis e inmediata; solo guía al paciente, la IA siempre trabaja con el audio grabado. En teléfonos se apaga ([decisión 8](decisiones.md#8-sin-transcripción-en-vivo-en-teléfonos-20-de-octubre-de-2026)) |
 | PDF (`lib/pdf.js`) | Navegador del paciente | La ficha no necesita volver a un servidor para convertirse en archivo |
 | Compartir | Navegador y apps del paciente | Se envía desde la cuenta de WhatsApp o correo del propio paciente |
 | Ficha base e historial (`lib/almacen.js`) | Navegador del paciente (`localStorage`) | El control necesita las consultas anteriores, y guardarlas en el teléfono evita una base de datos con información de salud |
@@ -41,7 +41,7 @@ import Grabadora from "./grabadora";
 />
 ```
 
-Graba en el primer formato que acepte el navegador (`audio/webm` en Chrome y Android, `audio/mp4` en Safari/iPhone). Al mismo tiempo usa el reconocimiento de voz del navegador (`SpeechRecognition`, idioma `es-GT`) y muestra las palabras mientras se dicen; el texto final se agrega al audio como `transcripcion`. Al detener, el paciente puede escuchar la grabación, leer la transcripción, **Grabar de nuevo** o **Borrar**. Si el navegador no tiene reconocimiento de voz, o falla, la grabación funciona igual y una nota lo avisa. Para apagar la transcripción en vivo, cambia `TRANSCRIPCION_EN_VIVO = false` al inicio del archivo.
+Graba en el primer formato que acepte el navegador (`audio/webm` en Chrome y Android, `audio/mp4` en Safari/iPhone). En computadora, al mismo tiempo usa el reconocimiento de voz del navegador (`SpeechRecognition`, idioma `es-GT`) y muestra las palabras mientras se dicen; el texto final se agrega al audio como `transcripcion`. En teléfonos (`esTelefono()`) no lo usa, porque compartir el micrófono puede cortar la grabación, y muestra "Te estamos escuchando". Al detener, el paciente puede escuchar la grabación, **Grabar de nuevo** o **Borrar**. Si el navegador no tiene reconocimiento de voz, o falla, la grabación funciona igual y una nota lo avisa. Para apagar la transcripción en vivo en todos lados, cambia `TRANSCRIPCION_EN_VIVO = false` al inicio del archivo.
 
 **PDF**: una función asíncrona que devuelve un `File`:
 
@@ -54,17 +54,18 @@ const archivo = await crearArchivoPdf(datos, ficha, { modo, anterior }); // File
 
 `datos` es `{ nombre, edad, sexo, contacto }` y `ficha` es el objeto de la ficha descrito abajo. Opcional: `{ modo, anterior }` para el PDF de control.
 
-**Ficha guardada e historial**: tres funciones sobre `localStorage`, protegidas para que un navegador en modo privado o bloqueado nunca rompa la app:
+**Ficha guardada e historial**: cuatro funciones sobre `localStorage`, protegidas para que un navegador en modo privado o bloqueado nunca rompa la app:
 
 ```js
-import { guardarFicha, leerFichaGuardada, borrarFichaGuardada } from "@/lib/almacen";
+import { guardarFicha, leerFichaGuardada, actualizarBase, borrarFichaGuardada } from "@/lib/almacen";
 
 guardarFicha(datos, ficha, modo); // guarda datos y ficha base, y agrega esta consulta al historial
 leerFichaGuardada();              // { datos, base, historial: [...], anterior } o null
+actualizarBase({ medicamentos }); // cambia enfermedades, alergias o medicamentos sin tocar el historial
 borrarFichaGuardada();            // borra todo
 ```
 
-Cada consulta del historial es `{ fecha, modo, motivo, evolucion, tratamiento }`; se guardan las últimas 10 y `anterior` es la más reciente. Lo guardado con la versión anterior de la app (solo la última consulta) se convierte solo al formato nuevo, sin perder nada.
+Cada consulta del historial es `{ fecha, modo, motivo, evolucion, tratamiento }`; se guardan las últimas 10 y `anterior` es la más reciente. Lo guardado con la versión anterior de la app (solo la última consulta) se convierte solo al formato nuevo, sin perder nada. En la pantalla, el botón **Editar** de "Tu ficha guardada" usa `actualizarBase`.
 
 "No sabe", "No aplica" y "Sin respuesta" no se guardan, así que esos campos se vuelven a preguntar la próxima vez.
 
