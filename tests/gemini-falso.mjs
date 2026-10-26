@@ -99,6 +99,18 @@ http
                 { campo: "medicamentos", pregunta: "¿Sigues tomando tus medicamentos o empezaste alguno nuevo?" },
               ],
         };
+      } else if (texto.includes("SIMULAR_GINECO") && !completar) {
+        // Pregunta por la menstruación, la intensidad y los hábitos; la app descarta lo que no aplica.
+        salida = {
+          transcripcion: "",
+          alarma: "",
+          ficha: { ...vacia, motivo: "Dolor de estómago", intensidad: "5 de 10" },
+          preguntas: [
+            { campo: "menstruacion", pregunta: "¿Cuándo fue tu última menstruación? ¿Podrías estar embarazada?" },
+            { campo: "intensidad", pregunta: "¿Qué tan fuerte es el dolor?" },
+            { campo: "habitos", pregunta: "¿Fumas o tomas alcohol? ¿Cuánto?" },
+          ],
+        };
       } else if (texto.includes("SIMULAR_ANTECEDENTES") && !completar) {
         // Para probar la repregunta del "sí" y los botones de enfermedades.
         salida = {

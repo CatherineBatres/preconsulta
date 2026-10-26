@@ -3,12 +3,21 @@
 import { useEffect, useRef, useState } from "react";
 import Grabadora from "./grabadora";
 import Fotos from "./fotos";
+import { EscalaNumerica, EscalaOpciones } from "./escala";
 import Tutorial, { tutorialVisto } from "./tutorial";
 import { Icono, Logo } from "./marca";
 import {
   aplicarRespuestas,
   AYUDAS,
   ENFERMEDADES_FRECUENTES,
+  ESCALA_EVOLUCION,
+  leerIntensidad,
+  MEDICIONES,
+  OPCIONES_RAPIDAS,
+  ponerIntensidad,
+  respuestasRapidasPara,
+  textoIntensidad,
+  textoMediciones,
   esSoloSi,
   REPREGUNTA_GENERAL,
   fechaLegible,
@@ -27,8 +36,11 @@ import { actualizarBase, borrarFichaGuardada, guardarFicha, leerFichaGuardada } 
 import { crearArchivoPdf, precargarPdf } from "@/lib/pdf";
 
 const PASOS = ["Cuéntanos", "Preguntas", "Tu ficha"];
-const DATOS_VACIOS = { nombre: "", edad: "", sexo: "", contacto: "", ocupacion: "" };
-const MOTIVO_VACIO = { eleccion: "", otro: "", cantidad: "", unidad: "dias" };
+const DATOS_VACIOS = { nombre: "", edad: "", sexo: "", contacto: "", ocupacion: "", municipio: "" };
+const MOTIVO_VACIO = { eleccion: "", otro: "", cantidad: "", unidad: "dias", intensidad: 0 };
+// Opciones para marcar con un toque en algunas preguntas; "Ninguna/Ninguno" excluye las demás.
+const OPCIONES_POR_CAMPO = { enfermedades: [...ENFERMEDADES_FRECUENTES, "Ninguna"], ...OPCIONES_RAPIDAS };
+const NINGUNA = new Set(["Ninguna", "Ninguno"]);
 const SEXOS = ["Femenino", "Masculino", "Prefiero no decir"];
 const SEGUNDOS_POR_RESPUESTA = 45;
 const MAX_BYTES_AUDIOS = 4 * 1024 * 1024;
@@ -125,6 +137,22 @@ function DatosGenerales({ datos, onChange }) {
           value={datos.ocupacion}
           onChange={onChange}
           placeholder="Ejemplo: maestra, albañil, estudiante"
+          className={campo}
+        />
+      </div>
+      <div>
+        <label htmlFor="municipio" className={etiqueta}>
+          Municipio donde vives <span className="font-normal text-slate-500">(opcional)</span>
+        </label>
+        <input
+          id="municipio"
+          name="municipio"
+          type="text"
+          maxLength={60}
+          autoComplete="address-level2"
+          value={datos.municipio}
+          onChange={onChange}
+          placeholder="Ejemplo: Mixco, Guatemala"
           className={campo}
         />
       </div>
@@ -231,6 +259,13 @@ function MotivoDeConsulta({ motivo, onCambiar, deshabilitado }) {
               En tu ficha dirá: <strong className="font-semibold text-tinta">{resumen}</strong>
             </p>
           )}
+          <EscalaNumerica
+            id="intensidad-motivo"
+            titulo="¿Qué tan fuerte es? Toca un número del 1 al 10"
+            valor={motivo.intensidad}
+            onCambiar={(n) => cambiar({ intensidad: n })}
+            deshabilitado={deshabilitado}
+          />
         </div>
       )}
     </section>
@@ -472,6 +507,20 @@ function HojaDeFicha({ modo, anterior, datos, onDato, ficha, onFicha, fecha, fot
         />
       </div>
       <div className={filaHoja}>
+        <label htmlFor="municipio" className={etiquetaHoja}>
+          Municipio
+        </label>
+        <input
+          id="municipio"
+          name="municipio"
+          type="text"
+          value={datos.municipio}
+          onChange={onDato}
+          placeholder="No referido"
+          className={datoHoja}
+        />
+      </div>
+      <div className={filaHoja}>
         <label htmlFor="contacto" className={etiquetaHoja}>
           Contacto
         </label>
@@ -486,7 +535,7 @@ function HojaDeFicha({ modo, anterior, datos, onDato, ficha, onFicha, fecha, fot
         />
       </div>
 
-      {seccionesPara(modo).map((seccion, i) => (
+      {seccionesPara(modo, datos).map((seccion, i) => (
         <div key={seccion.titulo}>
           <h3 className={tituloHoja}>{tituloNumerado(i + 1, seccion.titulo)}</h3>
           {seccion.soloControl && (
@@ -535,7 +584,7 @@ function HojaDeFicha({ modo, anterior, datos, onDato, ficha, onFicha, fecha, fot
       {fotos.length > 0 && (
         <div>
           <h3 className={tituloHoja}>
-            {tituloNumerado(seccionesPara(modo).length + 1, "Fotos adjuntas por el paciente")}
+            {tituloNumerado(seccionesPara(modo, datos).length + 1, "Fotos adjuntas por el paciente")}
           </h3>
           <ul className="grid grid-cols-3 gap-2 border-t border-slate-200 p-3" data-fotos-ficha>
             {fotos.map((foto, i) => (
@@ -576,6 +625,8 @@ export default function Home() {
   const [aviso, setAviso] = useState("");
   const [tutorialAbierto, setTutorialAbierto] = useState(false);
   const [repreguntada, setRepreguntada] = useState(""); // "ronda-pregunta" donde ya se pidió el detalle
+  const [mediciones, setMediciones] = useState({}); // { temperatura, presion, glucosa, peso } medidas en casa
+  const [evolucionElegida, setEvolucionElegida] = useState(""); // en control: "Mucho peor"… "Mucho mejor"
   const [fotos, setFotos] = useState([]); // { id, tipo: "lesion" | "medicamento", url, ancho, alto }; solo van al PDF
 
   // El tutorial se muestra solo la primera vez que alguien abre la app en este teléfono.
@@ -595,6 +646,26 @@ export default function Home() {
     modo === "primera"
       ? motivoConEvolucion(motivo.eleccion === "Otro" ? motivo.otro : motivo.eleccion, motivo.cantidad, motivo.unidad)
       : "";
+  const intensidadElegida = modo === "primera" && motivo.eleccion ? textoIntensidad(motivo.intensidad) : "";
+  const medicionesTexto = textoMediciones(mediciones);
+  const esControl = modo === "control";
+
+  // Motivo, intensidad, mediciones y "cómo se siente" se eligieron con un toque: la IA no los cambia.
+  function fijarElegidos(ficha) {
+    if (motivoElegido) ficha.motivo = motivoElegido;
+    if (intensidadElegida && leerIntensidad(ficha.intensidad) !== motivo.intensidad) {
+      ficha.intensidad = ponerIntensidad(ficha.intensidad, motivo.intensidad);
+    }
+    if (medicionesTexto) ficha.mediciones = medicionesTexto;
+    if (esControl && evolucionElegida) {
+      const frase = `Se siente ${evolucionElegida.toLowerCase()} que en la consulta anterior.`;
+      if (!String(ficha.evolucion || "").startsWith(frase)) {
+        const resto = String(ficha.evolucion || "").replace(/^Se siente [^.]* que en la consulta anterior\.\s*/, "");
+        ficha.evolucion = resto ? `${frase} ${resto}` : frase;
+      }
+    }
+    return ficha;
+  }
 
   // El generador de PDF se descarga al llegar a la ficha, para que el botón responda al instante.
   useEffect(() => {
@@ -626,6 +697,7 @@ export default function Home() {
         sexo: d.sexo || registro.datos.sexo || "",
         contacto: d.contacto || registro.datos.contacto || "",
         ocupacion: d.ocupacion || registro.datos.ocupacion || "",
+        municipio: d.municipio || registro.datos.municipio || "",
       }));
     }
   }
@@ -698,10 +770,18 @@ export default function Home() {
     setCargando(true);
     setError("");
     try {
-      const r = await pedirFicha({ paso: "analizar", texto, audio: audio?.blob, motivoElegido, yaPreguntados: "[]" });
-      // El motivo que eligió el paciente manda sobre lo que la IA haya resumido del relato.
-      const nueva = { ...r.ficha };
-      if (motivoElegido) nueva.motivo = motivoElegido;
+      const r = await pedirFicha({
+        paso: "analizar",
+        texto,
+        audio: audio?.blob,
+        motivoElegido,
+        intensidadElegida,
+        evolucionElegida: esControl ? evolucionElegida : "",
+        mediciones: medicionesTexto,
+        yaPreguntados: "[]",
+      });
+      // Lo que el paciente eligió con un toque manda sobre lo que la IA haya resumido del relato.
+      const nueva = fijarElegidos({ ...r.ficha });
       // En control, lo guardado en el teléfono completa lo que la IA no haya copiado.
       if (modo === "control" && guardada) {
         for (const [id, valor] of Object.entries(guardada.base)) nueva[id] ||= valor;
@@ -765,8 +845,7 @@ export default function Home() {
         if (r.audio) campos[`audio_${i}`] = r.audio.blob;
       });
       const r = await pedirFicha(campos);
-      const nueva = aplicarRespuestas(r.ficha, todas);
-      if (motivoElegido) nueva.motivo = motivoElegido;
+      const nueva = fijarElegidos(aplicarRespuestas(r.ficha, todas));
       if (r.alarma) setAlarma(r.alarma);
       setRespondidas(todas);
       if (r.preguntas.length > 0 && ronda < MAX_RONDAS) {
@@ -876,6 +955,8 @@ export default function Home() {
     setDatos(DATOS_VACIOS);
     setTexto("");
     setMotivo(MOTIVO_VACIO);
+    setMediciones({});
+    setEvolucionElegida("");
     setAudio(null);
     setTranscripcion("");
     setPreguntas([]);
@@ -911,17 +992,18 @@ export default function Home() {
     .map((t) => t.trim())
     .filter(Boolean);
 
-  // Botones de enfermedades: agregan o quitan la enfermedad del texto de la respuesta.
-  function marcarEnfermedad(opcion) {
+  const opcionesActuales = OPCIONES_POR_CAMPO[campoActual];
+
+  // Botones de opciones: agregan o quitan la opción del texto de la respuesta.
+  function marcarOpcion(opcion) {
     let lista;
-    if (opcion === "Ninguna") lista = elegidas.includes("Ninguna") ? [] : ["Ninguna"];
+    if (NINGUNA.has(opcion)) lista = elegidas.includes(opcion) ? [] : [opcion];
     else {
-      const sinNinguna = elegidas.filter((t) => t !== "Ninguna");
+      const sinNinguna = elegidas.filter((t) => !NINGUNA.has(t));
       lista = sinNinguna.includes(opcion) ? sinNinguna.filter((t) => t !== opcion) : [...sinNinguna, opcion];
     }
     cambiarRespuesta(actual, { texto: lista.join(", ") });
   }
-  const esControl = modo === "control";
 
   return (
     <main className="min-h-screen flex-1 bg-fondo font-sans text-tinta">
@@ -1028,7 +1110,19 @@ export default function Home() {
                   ? "Cuéntanos si mejoraste, si algo cambió y si pudiste seguir las indicaciones. Puedes grabar un audio, escribirlo, o ambos."
                   : "Habla como se lo contarías a tu médico: qué sientes, desde cuándo y qué has hecho. Puedes grabar un audio, escribirlo, o ambos."}
               </p>
-              <Grabadora audio={audio} onAudio={setAudio} deshabilitada={cargando} />
+              {esControl && (
+                <EscalaOpciones
+                  id="evolucion"
+                  titulo="Comparado con tu consulta anterior, te sientes:"
+                  opciones={ESCALA_EVOLUCION}
+                  valor={evolucionElegida}
+                  onCambiar={setEvolucionElegida}
+                  deshabilitado={cargando}
+                />
+              )}
+              <div className={esControl ? "mt-4" : ""}>
+                <Grabadora audio={audio} onAudio={setAudio} deshabilitada={cargando} />
+              </div>
               <label htmlFor="texto" className={`${etiqueta} mt-4`}>
                 O escríbelo aquí
               </label>
@@ -1054,6 +1148,34 @@ export default function Home() {
                 deshabilitado={cargando}
               />
             </section>
+
+            <details className={tarjeta} data-mediciones>
+              <summary className="cursor-pointer list-none text-lg font-semibold [&::-webkit-details-marker]:hidden">
+                ¿Te mediste algo en casa? <span className="text-sm font-normal text-slate-500">(opcional)</span>
+              </summary>
+              <p className="mt-1 text-sm text-slate-600">
+                Si tienes termómetro, tensiómetro o glucómetro, anota lo que marcó. Si no, déjalo en blanco.
+              </p>
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                {MEDICIONES.map((m) => (
+                  <div key={m.id}>
+                    <label htmlFor={`medicion-${m.id}`} className={etiqueta}>
+                      {m.etiqueta} <span className="font-normal text-slate-500">({m.unidad})</span>
+                    </label>
+                    <input
+                      id={`medicion-${m.id}`}
+                      type="text"
+                      inputMode={m.modo}
+                      maxLength={12}
+                      value={mediciones[m.id] ?? ""}
+                      onChange={(e) => setMediciones((v) => ({ ...v, [m.id]: e.target.value }))}
+                      placeholder={m.ejemplo}
+                      className={campo}
+                    />
+                  </div>
+                ))}
+              </div>
+            </details>
 
             {error && (
               <p role="alert" className="text-sm font-medium text-red-700">
@@ -1115,18 +1237,31 @@ export default function Home() {
                   maxSegundos={SEGUNDOS_POR_RESPUESTA}
                 />
               </div>
-              {campoActual === "enfermedades" && (
+              {campoActual === "intensidad" && (
+                <EscalaNumerica
+                  id="intensidad-pregunta"
+                  titulo="Toca un número del 1 al 10"
+                  valor={leerIntensidad(respuesta.texto)}
+                  onCambiar={(n) =>
+                    cambiarRespuesta(actual, {
+                      texto: n ? ponerIntensidad(respuesta.texto, n) : respuesta.texto.replace(/^\s*\d{1,2} de 10[.,;]?\s*/, ""),
+                    })
+                  }
+                  deshabilitado={cargando}
+                />
+              )}
+              {opcionesActuales && (
                 <div className="mt-4">
-                  <p className={etiqueta}>Toca las que tengas</p>
-                  <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Enfermedades frecuentes">
-                    {[...ENFERMEDADES_FRECUENTES, "Ninguna"].map((opcion) => {
+                  <p className={etiqueta}>Toca lo que aplique</p>
+                  <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Opciones">
+                    {opcionesActuales.map((opcion) => {
                       const elegida = elegidas.includes(opcion);
                       return (
                         <button
                           key={opcion}
                           type="button"
                           aria-pressed={elegida}
-                          onClick={() => marcarEnfermedad(opcion)}
+                          onClick={() => marcarOpcion(opcion)}
                           className={`min-h-10 rounded-full border px-3.5 text-sm font-medium transition focus:outline-none focus:ring-4 focus:ring-marca/25 ${
                             elegida ? "border-marca bg-marca text-white" : "border-borde bg-white text-tinta hover:bg-slate-50"
                           }`}
@@ -1149,7 +1284,11 @@ export default function Home() {
                 </p>
               )}
               <label htmlFor="respuesta" className={`${etiqueta} mt-4`}>
-                {campoActual === "enfermedades" ? "O escríbelas, con desde cuándo" : "O escribe tu respuesta"}
+                {campoActual === "enfermedades"
+                  ? "O escríbelas, con desde cuándo"
+                  : campoActual === "intensidad"
+                    ? "Si quieres, agrega la medida (grados, cuántas veces)"
+                    : "O escribe tu respuesta"}
               </label>
               <textarea
                 id="respuesta"
@@ -1171,7 +1310,7 @@ export default function Home() {
                 />
               )}
               <div className="mt-3 flex flex-wrap gap-2">
-                {Object.keys(RESPUESTAS_RAPIDAS).map((rapida) => (
+                {respuestasRapidasPara(campoActual).map((rapida) => (
                   <button
                     key={rapida}
                     type="button"

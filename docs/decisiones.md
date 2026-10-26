@@ -2,6 +2,24 @@
 
 Registro de las decisiones del proyecto: qué se decidió, por qué y qué se descartó. Las más recientes van primero.
 
+## 11. Ficha más completa, como una historia clínica (26 de octubre de 2026)
+
+**Contexto.** Se comparó la ficha de PreConsulta con fichas de historia clínica de referencia (plantilla de consulta general, guía de anamnesis de la Universidad de Salamanca y formato de la Universidad Tecnológica de Pereira). Solo se tomó lo que el paciente puede contestar en casa: el examen físico, el diagnóstico y el tratamiento son del médico.
+
+**Decisión.**
+- Historia de la enfermedad: "Dónde" (localización) y "A qué lo atribuye", la opinión del paciente.
+- **Escala del 1 al 10 con botones** para la intensidad: en "¿Por qué consultas hoy?" y en la pregunta de intensidad. Se llena como las estrellas de una calificación, de verde (leve) a rojo (muy fuerte). En control, otra escala: "Comparado con tu consulta anterior, te sientes: Mucho peor… Mucho mejor".
+- "¿Te mediste algo en casa?" (opcional): temperatura, presión, glucosa y peso. Se escriben tal cual en la ficha y nunca se preguntan.
+- Antecedentes gineco-obstétricos (última menstruación, posible embarazo, embarazos y método anticonceptivo), **solo si el sexo es femenino y la edad es de 10 años o más**, con botón "Prefiero no decir".
+- Hábitos con botones (fumo, fumaba antes, tomo alcohol, ejercicio, duermo poco) y la IA pide cantidades.
+- "Contactos, viajes y animales": viajes recientes, contacto con animales o picaduras, solo si hay fiebre, diarrea, vómitos, tos o algo en la piel.
+- Transfusiones, dentro de cirugías y hospitalizaciones.
+- Municipio donde vive (opcional). Igual que el nombre y el contacto, no se envía a la IA.
+
+**Por qué.** Son preguntas que están en todas las fichas profesionales y que el paciente sabe contestar. Para que la entrevista no se alargue, las nuevas solo aparecen cuando aplican, se responden con un toque cuando se puede y lo que se elige con un toque ya no se vuelve a preguntar.
+
+**Qué se descartó por ahora.** Vacunas, una revisión rápida por sistemas y la opción de llenar la ficha para otra persona (un niño o un adulto mayor, con sus propias preguntas). Quedan como trabajo futuro. Estado civil y fecha de nacimiento no aportan a una preconsulta.
+
 ## 10. Fotos solo dentro del PDF (26 de octubre de 2026)
 
 **Contexto.** Unos tres médicos de turno revisaron la app (por medio del Paciente 2) y pidieron poder agregar fotos: de una lesión (roncha, herida, inflamación) para ver qué tipo es, y de los medicamentos, porque la gente confunde sus nombres.

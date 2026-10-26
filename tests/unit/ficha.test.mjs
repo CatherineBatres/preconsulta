@@ -8,6 +8,11 @@ import {
   lineaPaciente,
   motivoConEvolucion,
   esSoloSi,
+  aplicaGineco,
+  leerIntensidad,
+  ponerIntensidad,
+  respuestasRapidasPara,
+  textoMediciones,
   normalizarFicha,
   PRIORIDAD,
   tituloNumerado,
@@ -143,4 +148,31 @@ test("fichaComoTexto avisa cuántas fotos van en el PDF", () => {
   assert.match(fichaComoTexto({}, ficha, { fotos: 2 }), /Hay 2 fotos adjuntas en el PDF/);
   assert.match(fichaComoTexto({}, ficha, { fotos: 1 }), /Hay 1 foto adjunta en el PDF/);
   assert.doesNotMatch(fichaComoTexto({}, ficha), /foto/);
+});
+
+test("la sección gineco-obstétrica solo aplica a mujeres de 10 años o más", () => {
+  assert.equal(aplicaGineco({ sexo: "Femenino", edad: "29" }), true);
+  assert.equal(aplicaGineco({ sexo: "Femenino", edad: "" }), true);
+  assert.equal(aplicaGineco({ sexo: "Femenino", edad: "7" }), false);
+  assert.equal(aplicaGineco({ sexo: "Masculino", edad: "29" }), false);
+  assert.equal(aplicaGineco({}), false);
+  assert.ok(camposPreguntables("primera", { sexo: "Femenino" }).includes("menstruacion"));
+  assert.ok(!camposPreguntables("primera", { sexo: "Masculino" }).includes("menstruacion"));
+  assert.ok(!camposPreguntables("primera").includes("mediciones")); // las mediciones nunca se preguntan
+});
+
+test("la escala de intensidad pone 'N de 10' sin borrar lo que se escribió", () => {
+  assert.equal(ponerIntensidad("", 7), "7 de 10");
+  assert.equal(ponerIntensidad("me late", 4), "4 de 10. me late");
+  assert.equal(ponerIntensidad("4 de 10. me late", 9), "9 de 10. me late");
+  assert.equal(leerIntensidad("9 de 10. me late"), 9);
+  assert.equal(ponerIntensidad("Moderada, 6 de 10", 7), "7 de 10. Moderada");
+  assert.equal(leerIntensidad("fuerte"), 0);
+});
+
+test("mediciones y respuestas rápidas", () => {
+  assert.equal(textoMediciones({ temperatura: "38.5", presion: " ", peso: "150" }), "Temperatura: 38.5 °C; Peso: 150 lb");
+  assert.equal(textoMediciones({}), "");
+  assert.ok(respuestasRapidasPara("menstruacion").includes("Prefiero no decir"));
+  assert.ok(!respuestasRapidasPara("alergias").includes("Prefiero no decir"));
 });

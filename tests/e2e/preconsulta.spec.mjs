@@ -196,6 +196,81 @@ test("las fotos van solo en el PDF: no se envían a la IA", async ({ page }) => 
   expect(pdf.toString("latin1")).toContain("/Subtype /Image");
 });
 
+test("escalas del 1 al 10, mediciones en casa y municipio quedan en la ficha", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#municipio").fill("Mixco");
+  await page.getByRole("button", { name: "Fiebre", exact: true }).click();
+  await page.locator("#motivo-cantidad").fill("2");
+  const escala = page.locator('[data-escala="intensidad-motivo"]');
+  await escala.getByRole("radio", { name: "7 de 10" }).click();
+  await expect(escala.getByRole("radio", { name: "7 de 10" })).toHaveAttribute("aria-checked", "true");
+  await expect(escala).toContainText("7 de 10 · Fuerte");
+
+  await page.locator("[data-mediciones] summary").click();
+  await page.locator("#medicion-temperatura").fill("38.5");
+  await page.locator("#medicion-presion").fill("120/80");
+  await page.locator("#texto").fill("Tengo fiebre desde ayer.");
+  const peticion = page.waitForRequest("**/api/ficha");
+  await page.getByRole("button", { name: "Continuar" }).click();
+  const cuerpo = (await peticion).postData();
+  expect(cuerpo).toContain("Temperatura: 38.5 °C; Presión: 120/80 mmHg");
+  expect(cuerpo).not.toContain("Mixco"); // el municipio no se le manda a la IA
+
+  // La intensidad ya se eligió en la escala: no se vuelve a preguntar
+  await expect(page.getByText("Pregunta 1 de 2")).toBeVisible();
+  await expect(page.locator('[data-escala="intensidad-pregunta"]')).toHaveCount(0);
+  for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "No sé" }).click();
+  await expect(page.getByRole("heading", { name: "Envíala a tu médico" })).toBeVisible();
+  await expect(page.locator("#ficha-intensidad")).toHaveValue(/^7 de 10/);
+  await expect(page.locator("#ficha-mediciones")).toHaveValue("Temperatura: 38.5 °C; Presión: 120/80 mmHg");
+  await expect(page.locator("#municipio")).toHaveValue("Mixco");
+  // Hombre o sin sexo indicado: no aparece la sección gineco-obstétrica
+  await expect(page.getByText("Antecedentes gineco-obstétricos")).toHaveCount(0);
+});
+
+test("en una mujer pregunta lo gineco-obstétrico con 'Prefiero no decir', y la intensidad se toca en la escala", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#sexo").selectOption("Femenino");
+  await page.locator("#edad").fill("29");
+  await page.locator("#texto").fill("Me duele el estómago. SIMULAR_GINECO");
+  await page.getByRole("button", { name: "Continuar" }).click();
+
+  // La intensidad ya venía llena (5 de 10), así que no se pregunta; quedan menstruación y hábitos
+  await expect(page.getByText("Pregunta 1 de 2")).toBeVisible();
+  await expect(page.getByRole("heading", { name: /última menstruación/ })).toBeVisible();
+  await page.getByRole("button", { name: "Prefiero no decir" }).click();
+
+  await expect(page.getByRole("heading", { name: /Fumas o tomas alcohol/ })).toBeVisible();
+  await page.getByRole("button", { name: "Fumo" }).click();
+  await page.getByRole("button", { name: "Tomo alcohol" }).click();
+  await expect(page.locator("#respuesta")).toHaveValue("Fumo, Tomo alcohol");
+  await page.getByRole("button", { name: "Ninguno" }).click();
+  await expect(page.locator("#respuesta")).toHaveValue("Ninguno");
+  await page.getByRole("button", { name: "Continuar" }).click();
+  // Segunda ronda (alergias y síntomas asociados)
+  for (let i = 0; i < 2; i++) await page.getByRole("button", { name: "No sé" }).click();
+
+  await expect(page.getByRole("heading", { name: "Envíala a tu médico" })).toBeVisible();
+  await expect(page.getByText("Antecedentes gineco-obstétricos")).toBeVisible();
+  await expect(page.locator("#ficha-menstruacion")).toHaveValue("Prefiere no decir");
+});
+
+test("en una pregunta de intensidad, la escala escribe 'N de 10' sin borrar lo demás", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#texto").fill("Dolor de cabeza por las tardes.");
+  await page.getByRole("button", { name: "Continuar" }).click();
+  // La primera ronda simulada pregunta por la intensidad
+  const escala = page.locator('[data-escala="intensidad-pregunta"]');
+  await expect(escala).toBeVisible();
+  await page.locator("#respuesta").fill("me late la cabeza");
+  await escala.getByRole("radio", { name: "4 de 10" }).click();
+  await expect(page.locator("#respuesta")).toHaveValue("4 de 10. me late la cabeza");
+  await escala.getByRole("radio", { name: "9 de 10" }).click();
+  await expect(page.locator("#respuesta")).toHaveValue("9 de 10. me late la cabeza");
+  await expect(escala).toContainText("9 de 10 · Muy fuerte");
+  await expect(page.getByRole("button", { name: "Prefiero no decir" })).toHaveCount(0);
+});
+
 test("consulta de control: retoma la ficha guardada y pregunta por la evolución", async ({ page }) => {
   await page.goto("/");
   await page.evaluate((clave) => {
@@ -221,6 +296,7 @@ test("consulta de control: retoma la ficha guardada y pregunta por la evolución
     })
   ).toBeVisible();
 
+  await page.getByRole("radio", { name: "Mejor", exact: true }).click();
   await page.locator("#texto").fill("El dolor bajó mucho, ahora solo me da algunas noches. Tomé la medicina.");
   await page.getByRole("button", { name: "Continuar" }).click();
 
@@ -234,7 +310,7 @@ test("consulta de control: retoma la ficha guardada y pregunta por la evolución
   await expect(page.getByRole("heading", { name: "Ficha de control y seguimiento" })).toBeVisible();
   await expect(page.getByText("II. Evolución desde la consulta anterior")).toBeVisible();
   await expect(page.locator("#consulta-anterior")).toContainText("Dolor de cabeza por las tardes");
-  await expect(page.locator("#ficha-evolucion")).toHaveValue(/El dolor bajó/);
+  await expect(page.locator("#ficha-evolucion")).toHaveValue(/^Se siente mejor que en la consulta anterior\. El dolor bajó/);
   await expect(page.locator("#ficha-enfermedades")).toHaveValue("Hipertensión arterial");
   await expect(page.locator("#ficha-medicamentos")).toHaveValue("Losartán 50 mg");
 
@@ -246,14 +322,17 @@ test("consulta de control: retoma la ficha guardada y pregunta por la evolución
   const guardado = await page.evaluate((clave) => JSON.parse(localStorage.getItem(clave)), CLAVE_GUARDADO);
   expect(guardado.version).toBe(2);
   expect(guardado.historial).toHaveLength(2);
-  expect(guardado.historial[1]).toMatchObject({ modo: "control", evolucion: "El dolor bajó; ahora aparece solo algunas noches" });
+  expect(guardado.historial[1]).toMatchObject({
+    modo: "control",
+    evolucion: "Se siente mejor que en la consulta anterior. El dolor bajó; ahora aparece solo algunas noches",
+  });
 
   page.on("dialog", (dialogo) => dialogo.accept());
   await page.getByRole("button", { name: "Empezar una ficha nueva" }).click();
   await page.getByRole("button", { name: /Control o seguimiento/ }).click();
   await expect(page.getByRole("heading", { name: "Historial de consultas (2)" })).toBeVisible();
   await expect(page.locator("[data-historial] li").first()).toContainText("Control");
-  await expect(page.locator("[data-historial] li").first()).toContainText("Evolución: El dolor bajó");
+  await expect(page.locator("[data-historial] li").first()).toContainText("Evolución: Se siente mejor que en la consulta anterior. El dolor bajó");
 });
 
 test("en control se pueden editar los antecedentes sin borrar el historial", async ({ page }) => {

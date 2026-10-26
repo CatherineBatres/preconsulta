@@ -21,7 +21,13 @@ Dos entregas: un feature nuevo, feedback con usuarios reales y correcciones a pa
 - [x] Documentar lo que dijeron en [sesiones.md](feedback/sesiones.md)
 - [x] Cambios pedidos por el médico: repregunta del "sí", medicamentos completos, enfermedades con un toque, orden de antecedentes y ocupación ([decisión 9](decisiones.md#9-antecedentes-como-los-pide-el-médico-23-de-octubre-de-2026))
 - [x] Fotos de la lesión y de los medicamentos, solo dentro del PDF, a partir de los médicos de turno ([decisión 10](decisiones.md#10-fotos-solo-dentro-del-pdf-26-de-octubre-de-2026))
+- [x] Ficha más completa, comparada con historias clínicas de referencia: localización, a qué lo atribuye, escala del 1 al 10 con botones, mediciones en casa, gineco-obstétricos, hábitos con botones, viajes y animales, transfusiones y municipio ([decisión 11](decisiones.md#11-ficha-más-completa-como-una-historia-clínica-26-de-octubre-de-2026))
 - [x] Actualizar Next.js a 16.4.3 por una falla de seguridad crítica
 - [x] Elegir las correcciones más importantes en [resumen.md](feedback/resumen.md)
 - [x] Hacer las correcciones y volver a correr las pruebas
 - [ ] Publicar la versión final con el resumen del feedback
+
+## Trabajo futuro
+
+- Vacunas, revisión rápida por sistemas y llenar la ficha para otra persona (niño o adulto mayor) ([decisión 11](decisiones.md#11-ficha-más-completa-como-una-historia-clínica-26-de-octubre-de-2026))
+- Que la IA lea la caja del medicamento ([decisión 10](decisiones.md#10-fotos-solo-dentro-del-pdf-26-de-octubre-de-2026))

@@ -8,7 +8,10 @@ El navegador envía `multipart/form-data`, así el audio viaja como archivo bina
 | --- | --- | --- |
 | `paso` | siempre | `analizar` (primera llamada) o `completar` (cada ronda de respuestas) |
 | `modo` | siempre | `primera` (primera vez) o `control` (seguimiento) |
-| `edad`, `sexo`, `ocupacion` | siempre | Edad, sexo y ocupación, opcionales |
+| `edad`, `sexo`, `ocupacion` | siempre | Edad, sexo y ocupación, opcionales. Con sexo femenino y 10 años o más se agregan las preguntas gineco-obstétricas |
+| `intensidadElegida` | `analizar` | La intensidad que el paciente tocó en la escala, por ejemplo `7 de 10` |
+| `evolucionElegida` | `analizar` | En control: `Mucho peor`, `Peor`, `Igual`, `Mejor` o `Mucho mejor` |
+| `mediciones` | `analizar` | Lo que se midió en casa, por ejemplo `Temperatura: 38.5 °C; Presión: 120/80 mmHg` |
 | `base` | `control` | La ficha base guardada, en JSON: `{ enfermedades, alergias, medicamentos, anterior: { fecha, motivo }, historial: [hasta 3 consultas] }` |
 | `yaPreguntados` | siempre | Lista JSON de los campos que ya se preguntaron, para no repetirlos |
 | `texto` | `analizar` | El relato escrito, hasta 4,000 caracteres |
@@ -67,7 +70,7 @@ const interaccion = await ia.interactions.create({
 const salida = JSON.parse(interaccion.output_text);
 ```
 
-`ESQUEMA` es un esquema JSON armado a partir de `lib/ficha.js` con cuatro campos: `transcripcion`, `alarma`, `ficha` (18 campos de texto) y `preguntas` (hasta 5 `{ campo, pregunta }`, donde `campo` debe ser uno de los campos de la ficha). Pedir un esquema en vez de texto libre es lo que hace que cada ficha regrese con las mismas secciones, en el mismo orden, y ligar cada pregunta a un campo es lo que permite seguir preguntando hasta completar la ficha.
+`ESQUEMA` es un esquema JSON armado a partir de `lib/ficha.js` con cuatro campos: `transcripcion`, `alarma`, `ficha` (23 campos de texto) y `preguntas` (hasta 5 `{ campo, pregunta }`, donde `campo` debe ser uno de los campos de la ficha). Pedir un esquema en vez de texto libre es lo que hace que cada ficha regrese con las mismas secciones, en el mismo orden, y ligar cada pregunta a un campo es lo que permite seguir preguntando hasta completar la ficha.
 
 ## 3. APIs del navegador
 

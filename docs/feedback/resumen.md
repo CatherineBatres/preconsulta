@@ -1,6 +1,6 @@
 # Resumen del feedback
 
-Resumen de las sesiones con dos pacientes y un médico. Las notas completas y las transcripciones están en [sesiones.md](sesiones.md).
+Resumen de las sesiones con dos pacientes, un médico y un grupo de médicos de turno. Las notas completas y las transcripciones están en [sesiones.md](sesiones.md).
 
 ## Quiénes participaron
 
@@ -40,6 +40,7 @@ Resumen de las sesiones con dos pacientes y un médico. Las notas completas y la
 | Falta la ocupación | Campo opcional en datos generales | Médico 1 (su formulario) | Baja | Hecho |
 | No se pueden mandar fotos | Fotos de la lesión y de los medicamentos, solo dentro del PDF ([decisión 10](../decisiones.md#10-fotos-solo-dentro-del-pdf-26-de-octubre-de-2026)) | Médicos de turno | Alta | Hecho |
 | "Tiroides" poco claro | El botón dice "Tiroides (hipo o hipertiroidismo)" | Médicos de turno | Baja | Hecho |
+| La ficha no tenía todo lo de una historia clínica | Localización, a qué lo atribuye, escala del 1 al 10 con botones, mediciones en casa, gineco-obstétricos, hábitos, viajes y animales, municipio ([decisión 11](../decisiones.md#11-ficha-más-completa-como-una-historia-clínica-26-de-octubre-de-2026)) | Revisión contra fichas de referencia | Alta | Hecho |
 
 ## Qué no se corrige por ahora, y por qué
 

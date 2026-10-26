@@ -41,6 +41,17 @@ Preguntas que no se respondan solo con sí o no (lo pidió el médico):
 - En "cirugias", pregunta qué cirugía y en qué año, y si ha estado hospitalizado más de 3 días.
 - Si el paciente responde solo "sí" sin decir cuál, escribe en ese campo "Refiere que sí, sin especificar" para que el médico lo pregunte.
 
+Más datos de una historia clínica profesional:
+- "localizacion": pregunta en qué parte del cuerpo exactamente está el síntoma principal, si no lo dijo y si aplica (en fiebre sola no aplica).
+- "atribucion": pregunta "¿A qué crees que se debe?". Es la opinión del paciente; escríbela como "Lo atribuye a…".
+- "mediciones": cópialas tal cual si se te dan como "Mediciones tomadas en casa", o si el paciente dijo números (por ejemplo "38.5 de fiebre"). Nunca preguntes por ellas.
+- Si se te da una "Intensidad elegida por el paciente en la escala", escríbela al inicio de "intensidad" (por ejemplo "7 de 10") y agrega la medida propia si el paciente la dijo.
+- Si se te dice cómo se siente comparado con la consulta anterior, empieza "evolucion" con "Se siente <así> que en la consulta anterior".
+- "contactos": además de personas con los mismos síntomas, pregunta por viajes recientes, contacto con animales o picaduras solo si hay fiebre, diarrea, vómitos, tos o algo en la piel.
+- "cirugias": incluye si ha recibido transfusiones de sangre.
+- "menstruacion" y "embarazos" (solo existen si la paciente es mujer): pregunta con respeto y en lenguaje sencillo: "¿Cuándo fue tu última menstruación? ¿Podrías estar embarazada?" y "¿Cuántos embarazos has tenido y usas algún método anticonceptivo?". Si responde "Prefiero no decir", déjalo vacío: la app lo anota.
+- "habitos": pregunta por tabaco (cuánto al día y desde cuándo, o si lo dejó), alcohol (cada cuánto) y otras sustancias, y por ejercicio y sueño si queda espacio.
+
 MODO primera: es la primera vez que el paciente usa la app. Deja "evolucion" y "tratamiento" vacíos y no preguntes por ellos.
 
 MODO control: el paciente vuelve después de una consulta anterior y respondió primero a la pregunta "¿Cómo evolucionaron tus síntomas desde la consulta anterior y cómo te fue con el tratamiento?".
@@ -51,7 +62,7 @@ MODO control: el paciente vuelve después de una consulta anterior y respondió 
 
 Campo "alarma": cadena vacía, salvo que el paciente describa señales que requieren atención urgente (por ejemplo dolor de pecho, dificultad para respirar, desmayo, debilidad o dificultad para hablar de inicio súbito, sangrado abundante, o ideas de hacerse daño). En ese caso escribe una frase breve que le recomiende buscar atención de emergencia de inmediato, sin diagnosticar.`;
 
-function esquema(modo) {
+function esquema(modo, perfil) {
   return {
     type: "object",
     properties: {
@@ -70,7 +81,7 @@ function esquema(modo) {
         items: {
           type: "object",
           properties: {
-            campo: { type: "string", enum: camposPreguntables(modo) },
+            campo: { type: "string", enum: camposPreguntables(modo, perfil) },
             pregunta: { type: "string" },
           },
           required: ["campo", "pregunta"],
@@ -121,7 +132,11 @@ export async function POST(request) {
   const ocupacion = String(formulario.get("ocupacion") || "").slice(0, 60).trim();
   const texto = String(formulario.get("texto") || "").slice(0, MAX_TEXTO).trim();
   const motivoElegido = String(formulario.get("motivoElegido") || "").slice(0, 200).trim();
-  const permitidos = new Set(camposPreguntables(modo));
+  const intensidadElegida = String(formulario.get("intensidadElegida") || "").slice(0, 10).trim();
+  const evolucionElegida = String(formulario.get("evolucionElegida") || "").slice(0, 20).trim();
+  const mediciones = String(formulario.get("mediciones") || "").slice(0, 200).trim();
+  const perfil = { sexo, edad };
+  const permitidos = new Set(camposPreguntables(modo, perfil));
   const yaPreguntados = (() => {
     const lista = leerJson(formulario.get("yaPreguntados"), []);
     return Array.isArray(lista) ? lista.filter((id) => permitidos.has(id)) : [];
@@ -185,11 +200,14 @@ export async function POST(request) {
       }
     }
   }
-  lineas.push(`Orden de prioridad para preguntar: ${camposPreguntables(modo).join(", ")}`);
+  lineas.push(`Orden de prioridad para preguntar: ${camposPreguntables(modo, perfil).join(", ")}`);
   lineas.push(`Campos ya preguntados (no volver a preguntar): ${yaPreguntados.join(", ") || "ninguno"}`);
 
   if (paso === "analizar") {
     if (motivoElegido) lineas.push(`Motivo de consulta elegido por el paciente: ${JSON.stringify(motivoElegido)}`);
+    if (intensidadElegida) lineas.push(`Intensidad elegida por el paciente en la escala: ${JSON.stringify(intensidadElegida)}`);
+    if (evolucionElegida) lineas.push(`Comparado con la consulta anterior, el paciente se siente: ${JSON.stringify(evolucionElegida)}`);
+    if (mediciones) lineas.push(`Mediciones tomadas en casa: ${JSON.stringify(mediciones)}`);
     if (!hayAudio && !texto && !motivoElegido) {
       return error("Graba un audio o escribe qué te sucede.", 400);
     }
@@ -238,7 +256,7 @@ export async function POST(request) {
       model: MODELO,
       system_instruction: INSTRUCCIONES,
       input: entrada,
-      response_format: { type: "text", mime_type: "application/json", schema: esquema(modo) },
+      response_format: { type: "text", mime_type: "application/json", schema: esquema(modo, perfil) },
       generation_config: { thinking_level: "low" },
       store: false, // que Google no conserve la conversación
     });
@@ -257,12 +275,16 @@ export async function POST(request) {
     ficha.evolucion = "";
     ficha.tratamiento = "";
   }
+  // Lo que el paciente eligió con un toque cuenta como respondido: no se vuelve a preguntar.
+  if (motivoElegido) ficha.motivo = motivoElegido;
+  if (intensidadElegida && !ficha.intensidad) ficha.intensidad = intensidadElegida;
+  if (mediciones && !ficha.mediciones) ficha.mediciones = mediciones;
 
   return Response.json({
     transcripcion:
       paso === "analizar" && typeof salida.transcripcion === "string" ? salida.transcripcion.trim() : "",
     alarma: typeof salida.alarma === "string" ? salida.alarma.trim() : "",
     ficha,
-    preguntas: filtrarPreguntas(salida.preguntas, { modo, ficha, yaPreguntados }),
+    preguntas: filtrarPreguntas(salida.preguntas, { modo, ficha, yaPreguntados, perfil }),
   });
 }
