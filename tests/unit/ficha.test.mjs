@@ -13,6 +13,7 @@ import {
   ponerIntensidad,
   respuestasRapidasPara,
   textoMediciones,
+  porcentajeCompleto,
   normalizarFicha,
   PRIORIDAD,
   tituloNumerado,
@@ -175,4 +176,15 @@ test("mediciones y respuestas rápidas", () => {
   assert.equal(textoMediciones({}), "");
   assert.ok(respuestasRapidasPara("menstruacion").includes("Prefiero no decir"));
   assert.ok(!respuestasRapidasPara("alergias").includes("Prefiero no decir"));
+});
+
+test("porcentajeCompleto cuenta lo que ya tiene dato y lo respondido en la ronda", () => {
+  const vacia = fichaVacia();
+  assert.equal(porcentajeCompleto(vacia), 0);
+  const conMotivo = { ...vacia, motivo: "Tos" };
+  const uno = porcentajeCompleto(conMotivo);
+  assert.ok(uno > 0 && uno < 20);
+  assert.ok(porcentajeCompleto(conMotivo, "primera", {}, ["alergias"]) > uno);
+  const llena = Object.fromEntries(Object.keys(vacia).map((k) => [k, "x"]));
+  assert.equal(porcentajeCompleto(llena), 100);
 });

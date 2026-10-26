@@ -42,7 +42,7 @@ Preguntas que no se respondan solo con sí o no (lo pidió el médico):
 - Si el paciente responde solo "sí" sin decir cuál, escribe en ese campo "Refiere que sí, sin especificar" para que el médico lo pregunte.
 
 Más datos de una historia clínica profesional:
-- "localizacion": pregunta en qué parte del cuerpo exactamente está el síntoma principal, si no lo dijo y si aplica (en fiebre sola no aplica).
+- "localizacion": pregunta en qué parte del cuerpo exactamente está el síntoma principal, si no lo dijo y si aplica (en fiebre sola no aplica). Si se te da "Dónde le molesta", cópialo en "localizacion" y no lo preguntes.
 - "atribucion": pregunta "¿A qué crees que se debe?". Es la opinión del paciente; escríbela como "Lo atribuye a…".
 - "mediciones": cópialas tal cual si se te dan como "Mediciones tomadas en casa", o si el paciente dijo números (por ejemplo "38.5 de fiebre"). Nunca preguntes por ellas.
 - Si se te da una "Intensidad elegida por el paciente en la escala", escríbela al inicio de "intensidad" (por ejemplo "7 de 10") y agrega la medida propia si el paciente la dijo.
@@ -135,6 +135,7 @@ export async function POST(request) {
   const intensidadElegida = String(formulario.get("intensidadElegida") || "").slice(0, 10).trim();
   const evolucionElegida = String(formulario.get("evolucionElegida") || "").slice(0, 20).trim();
   const mediciones = String(formulario.get("mediciones") || "").slice(0, 200).trim();
+  const localizacionElegida = String(formulario.get("localizacionElegida") || "").slice(0, 300).trim();
   const perfil = { sexo, edad };
   const permitidos = new Set(camposPreguntables(modo, perfil));
   const yaPreguntados = (() => {
@@ -208,6 +209,7 @@ export async function POST(request) {
     if (intensidadElegida) lineas.push(`Intensidad elegida por el paciente en la escala: ${JSON.stringify(intensidadElegida)}`);
     if (evolucionElegida) lineas.push(`Comparado con la consulta anterior, el paciente se siente: ${JSON.stringify(evolucionElegida)}`);
     if (mediciones) lineas.push(`Mediciones tomadas en casa: ${JSON.stringify(mediciones)}`);
+    if (localizacionElegida) lineas.push(`Dónde le molesta (lo tocó en un mapa del cuerpo): ${JSON.stringify(localizacionElegida)}`);
     if (!hayAudio && !texto && !motivoElegido) {
       return error("Graba un audio o escribe qué te sucede.", 400);
     }
@@ -279,6 +281,7 @@ export async function POST(request) {
   if (motivoElegido) ficha.motivo = motivoElegido;
   if (intensidadElegida && !ficha.intensidad) ficha.intensidad = intensidadElegida;
   if (mediciones && !ficha.mediciones) ficha.mediciones = mediciones;
+  if (localizacionElegida && !ficha.localizacion) ficha.localizacion = localizacionElegida;
 
   return Response.json({
     transcripcion:

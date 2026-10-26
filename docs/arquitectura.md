@@ -10,6 +10,7 @@
 | Tutorial (`app/tutorial.js`) | Navegador del paciente | Aparece solo la primera vez (se recuerda en `localStorage`, clave `preconsulta.tutorialVisto`) y se vuelve a abrir con "¿Cómo funciona?" |
 | Grabadora (`app/grabadora.js`) | Navegador del paciente | El navegador ya trae una API de micrófono (`MediaRecorder`) |
 | Transcripción en vivo (solo computadora) | Reconocimiento de voz del navegador (Chrome lo envía a Google, Safari a Apple) | Gratis e inmediata; solo guía al paciente, la IA siempre trabaja con el audio grabado. En teléfonos se apaga ([decisión 8](decisiones.md#8-sin-transcripción-en-vivo-en-teléfonos-20-de-octubre-de-2026)) |
+| Mapa del cuerpo (`app/cuerpo.js`) | Navegador del paciente | Figura de frente y de espalda para tocar dónde molesta; llena "Dónde" en la ficha ([decisión 12](decisiones.md#12-más-interactiva-pantallas-cortas-mapa-del-cuerpo-y-avance-26-de-octubre-de-2026)) |
 | Escalas (`app/escala.js`) | Navegador del paciente | Botones del 1 al 10 para la intensidad y de "Mucho peor" a "Mucho mejor" para la evolución; lo elegido se escribe en la ficha y la IA no lo cambia |
 | Fotos (`app/fotos.js`) | Navegador del paciente | Se achican a JPEG en el teléfono y solo van dentro del PDF: no se envían a la IA ni se guardan ([decisión 10](decisiones.md#10-fotos-solo-dentro-del-pdf-26-de-octubre-de-2026)) |
 | PDF (`lib/pdf.js`) | Navegador del paciente | La ficha no necesita volver a un servidor para convertirse en archivo |
@@ -19,7 +20,7 @@
 | `GEMINI_API_KEY` | Variables de entorno de Vercel (`.env.local` en tu computadora) | Todo lo que está en el navegador lo puede leer cualquiera; la llave debe quedarse en el servidor |
 | Modelo de IA `gemini-3.8-flash` | Servidores de Google, por medio de la API de Gemini | Entiende audio y texto en una sola llamada y devuelve JSON estructurado |
 
-Enviar lo mínimo es parte del diseño: **el nombre, el contacto, el municipio y las fotos nunca salen del teléfono**, salvo dentro del PDF que el paciente comparte. A la IA solo llegan la edad, el sexo, la ocupación, lo que se eligió con un toque (motivo, intensidad, cómo se siente), las mediciones de casa, el relato, las respuestas y, en un control, las enfermedades, alergias y medicamentos guardados y un resumen de hasta 3 consultas anteriores; cada llamada le pide a Google no conservar la conversación (`store: false`). No hay base de datos: la ficha base y el historial viven solo en el navegador del paciente, solo si presiona **Guardar en este teléfono**, y puede borrarla cuando quiera.
+Enviar lo mínimo es parte del diseño: **el nombre, el contacto, el municipio y las fotos nunca salen del teléfono**, salvo dentro del PDF que el paciente comparte. A la IA solo llegan la edad, el sexo, la ocupación, lo que se eligió con un toque (motivo, intensidad, dónde molesta, cómo se siente), las mediciones de casa, el relato, las respuestas y, en un control, las enfermedades, alergias y medicamentos guardados y un resumen de hasta 3 consultas anteriores; cada llamada le pide a Google no conservar la conversación (`store: false`). No hay base de datos: la ficha base y el historial viven solo en el navegador del paciente, solo si presiona **Guardar en este teléfono**, y puede borrarla cuando quiera.
 
 ### El viaje de un audio
 

@@ -11,6 +11,7 @@ El navegador envía `multipart/form-data`, así el audio viaja como archivo bina
 | `edad`, `sexo`, `ocupacion` | siempre | Edad, sexo y ocupación, opcionales. Con sexo femenino y 10 años o más se agregan las preguntas gineco-obstétricas |
 | `intensidadElegida` | `analizar` | La intensidad que el paciente tocó en la escala, por ejemplo `7 de 10` |
 | `evolucionElegida` | `analizar` | En control: `Mucho peor`, `Peor`, `Igual`, `Mejor` o `Mucho mejor` |
+| `localizacionElegida` | `analizar` | Lo que el paciente tocó en el mapa del cuerpo, por ejemplo `Abdomen arriba, lado derecho` |
 | `mediciones` | `analizar` | Lo que se midió en casa, por ejemplo `Temperatura: 38.5 °C; Presión: 120/80 mmHg` |
 | `base` | `control` | La ficha base guardada, en JSON: `{ enfermedades, alergias, medicamentos, anterior: { fecha, motivo }, historial: [hasta 3 consultas] }` |
 | `yaPreguntados` | siempre | Lista JSON de los campos que ya se preguntaron, para no repetirlos |

@@ -2,6 +2,20 @@
 
 Registro de las decisiones del proyecto: qué se decidió, por qué y qué se descartó. Las más recientes van primero.
 
+## 12. Más interactiva: pantallas cortas, mapa del cuerpo y avance (26 de octubre de 2026)
+
+**Contexto.** Con las preguntas nuevas, el paso 1 se volvió una página larga y la entrevista podía sentirse tediosa.
+
+**Decisión.**
+- **Paso 1 por pantallas**, una tarjeta a la vez con barra de avance y botones Atrás y Siguiente: tipo de consulta → tus datos → motivo → medidas → tu relato. En control no hay pantalla de motivo. Se puede saltar a cualquier pantalla tocando la barra.
+- **Mapa del cuerpo** (de frente y de espalda) en la pantalla del motivo y en la pregunta "¿Dónde?": la persona toca dónde le molesta y eso llena "Dónde" en la ficha. Derecha e izquierda son las del paciente, con un aviso debajo.
+- **Avance y ánimo** durante las preguntas: "Tu ficha va 56% completa", que sube al responder, y mensajes cortos ("¡Empecemos!", "Vas muy bien", "Última pregunta de esta parte").
+- **Transiciones suaves** entre pantallas y preguntas (se apagan si el teléfono pide menos movimiento) y un cierre "¡Tu ficha está lista!" con una palomita animada y el porcentaje completo.
+
+**Por qué.** Una pantalla a la vez se siente más corta en el teléfono, y ver el avance motiva a terminar. Tocar el cuerpo es más fácil y más preciso que describir con palabras dónde duele.
+
+**Qué se descartó.** Puntos o insignias tipo juego: no van con una ficha médica. Caritas en la escala del dolor: por ahora basta la escala de colores.
+
 ## 11. Ficha más completa, como una historia clínica (26 de octubre de 2026)
 
 **Contexto.** Se comparó la ficha de PreConsulta con fichas de historia clínica de referencia (plantilla de consulta general, guía de anamnesis de la Universidad de Salamanca y formato de la Universidad Tecnológica de Pereira). Solo se tomó lo que el paciente puede contestar en casa: el examen físico, el diagnóstico y el tratamiento son del médico.

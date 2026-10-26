@@ -1,19 +1,20 @@
 # Pruebas
 
-**Pruebas unitarias** (33): revisan los ayudantes de la ficha (incluido el motivo con su tiempo de evolución, la detección de un "sí" sin detalle y el orden de los antecedentes el aviso de fotos en el mensaje de texto, la escala de intensidad, las mediciones y cuándo aplica la sección gineco-obstétrica), las reglas de las preguntas, la ficha guardada, la edición de antecedentes y el historial, con el ejecutor de pruebas que trae Node. No necesitan navegador ni llave:
+**Pruebas unitarias** (34): revisan los ayudantes de la ficha (incluido el motivo con su tiempo de evolución, la detección de un "sí" sin detalle y el orden de los antecedentes el aviso de fotos en el mensaje de texto, la escala de intensidad, las mediciones cuándo aplica la sección gineco-obstétrica y el porcentaje de avance), las reglas de las preguntas, la ficha guardada, la edición de antecedentes y el historial, con el ejecutor de pruebas que trae Node. No necesitan navegador ni llave:
 
 ```bash
 npm test
 ```
 
-**Pruebas de punta a punta** (17): abren la app real en un Chrome del tamaño de un teléfono, con un micrófono simulado, y recorren:
-- una primera vez con dos rondas de preguntas, las respuestas rápidas y la marca "Sin respuesta", el PDF y el guardado en el teléfono;
+**Pruebas de punta a punta** (18): abren la app real en un Chrome del tamaño de un teléfono, con un micrófono simulado, y recorren:
+- una primera vez que recorre el paso 1 por pantallas (con Atrás), dos rondas de preguntas con avance y ánimo, las respuestas rápidas y la marca "Sin respuesta", el PDF y el guardado en el teléfono;
 - el motivo elegido con un toque ("Fiebre de 5 días de evolución"), que ninguna ronda de la IA puede cambiar;
 - la repregunta cuando el paciente responde solo "sí", los botones de enfermedades y la ocupación;
 - las fotos de la lesión y del medicamento: aparecen en la ficha y en el PDF, y nunca van en lo que se envía a la IA;
 - las escalas del 1 al 10, las mediciones en casa y el municipio, que no se manda a la IA;
 - la sección gineco-obstétrica solo en mujeres, con "Prefiero no decir", y los botones de hábitos;
 - la escala de intensidad dentro de una pregunta, sin borrar lo que se escribió;
+- el mapa del cuerpo, de frente y de espalda, que llena "Dónde";
 - un control que carga la ficha guardada, usa la escala "¿cómo te sientes?", pregunta por la evolución y suma la visita al historial;
 - la edición de antecedentes en control sin perder el historial;
 - el borrado de la ficha guardada;

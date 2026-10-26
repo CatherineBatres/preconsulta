@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Grabadora from "./grabadora";
 import Fotos from "./fotos";
 import { EscalaNumerica, EscalaOpciones } from "./escala";
+import MapaDelCuerpo from "./cuerpo";
 import Tutorial, { tutorialVisto } from "./tutorial";
 import { Icono, Logo } from "./marca";
 import {
@@ -15,6 +16,7 @@ import {
   MEDICIONES,
   OPCIONES_RAPIDAS,
   ponerIntensidad,
+  porcentajeCompleto,
   respuestasRapidasPara,
   textoIntensidad,
   textoMediciones,
@@ -41,6 +43,53 @@ const MOTIVO_VACIO = { eleccion: "", otro: "", cantidad: "", unidad: "dias", int
 // Opciones para marcar con un toque en algunas preguntas; "Ninguna/Ninguno" excluye las demás.
 const OPCIONES_POR_CAMPO = { enfermedades: [...ENFERMEDADES_FRECUENTES, "Ninguna"], ...OPCIONES_RAPIDAS };
 const NINGUNA = new Set(["Ninguna", "Ninguno"]);
+
+// El paso 1 va por pantallas cortas, una tarjeta a la vez, para que no sea una página larga.
+const PANTALLAS_INICIO = {
+  primera: [
+    ["tipo", "Tipo de consulta"],
+    ["datos", "Tus datos"],
+    ["motivo", "Motivo"],
+    ["medidas", "Medidas"],
+    ["relato", "Tu relato"],
+  ],
+  control: [
+    ["tipo", "Tipo de consulta"],
+    ["datos", "Tus datos"],
+    ["medidas", "Medidas"],
+    ["relato", "Tu relato"],
+  ],
+};
+
+// Mensajes cortos de ánimo durante las preguntas.
+const ANIMOS = ["¡Gracias! Esto le sirve mucho a tu médico.", "Vas muy bien.", "Cada respuesta ahorra tiempo en tu consulta."];
+function mensajeDeAnimo({ actual, total, ronda }) {
+  if (ronda === 1 && actual === 0) return "¡Empecemos! Son preguntas cortas; puedes hablar o escribir.";
+  if (actual === total - 1) return ronda >= MAX_RONDAS ? "¡Última pregunta!" : "Última pregunta de esta parte.";
+  return ANIMOS[(actual + ronda) % ANIMOS.length];
+}
+
+// Barra de "Tu ficha va X% completa".
+function AvanceDeFicha({ porcentaje }) {
+  return (
+    <div data-avance>
+      <div className="flex items-center justify-between text-sm">
+        <span className="font-medium text-tinta">Tu ficha va {porcentaje}% completa</span>
+        <span aria-hidden="true">{porcentaje >= 80 ? "🎉" : porcentaje >= 50 ? "💪" : "📝"}</span>
+      </div>
+      <div
+        className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-200"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={porcentaje}
+        aria-label="Avance de la ficha"
+      >
+        <div className="h-full rounded-full bg-marca transition-all duration-500" style={{ width: `${porcentaje}%` }} />
+      </div>
+    </div>
+  );
+}
 const SEXOS = ["Femenino", "Masculino", "Prefiero no decir"];
 const SEGUNDOS_POR_RESPUESTA = 45;
 const MAX_BYTES_AUDIOS = 4 * 1024 * 1024;
@@ -627,7 +676,9 @@ export default function Home() {
   const [repreguntada, setRepreguntada] = useState(""); // "ronda-pregunta" donde ya se pidió el detalle
   const [mediciones, setMediciones] = useState({}); // { temperatura, presion, glucosa, peso } medidas en casa
   const [evolucionElegida, setEvolucionElegida] = useState(""); // en control: "Mucho peor"… "Mucho mejor"
-  const [fotos, setFotos] = useState([]); // { id, tipo: "lesion" | "medicamento", url, ancho, alto }; solo van al PDF
+  const [fotos, setFotos] = useState([]);
+  const [pantalla, setPantalla] = useState("tipo"); // pantalla del paso 1
+  const [lugares, setLugares] = useState([]); // lugares del cuerpo tocados en el mapa // { id, tipo: "lesion" | "medicamento", url, ancho, alto }; solo van al PDF
 
   // El tutorial se muestra solo la primera vez que alguien abre la app en este teléfono.
   useEffect(() => {
@@ -648,6 +699,7 @@ export default function Home() {
       : "";
   const intensidadElegida = modo === "primera" && motivo.eleccion ? textoIntensidad(motivo.intensidad) : "";
   const medicionesTexto = textoMediciones(mediciones);
+  const lugaresTexto = modo === "primera" ? lugares.join(", ") : "";
   const esControl = modo === "control";
 
   // Motivo, intensidad, mediciones y "cómo se siente" se eligieron con un toque: la IA no los cambia.
@@ -657,6 +709,11 @@ export default function Home() {
       ficha.intensidad = ponerIntensidad(ficha.intensidad, motivo.intensidad);
     }
     if (medicionesTexto) ficha.mediciones = medicionesTexto;
+    if (lugaresTexto) {
+      const actualLugar = String(ficha.localizacion || "").trim();
+      if (!actualLugar) ficha.localizacion = lugaresTexto;
+      else if (!actualLugar.includes(lugares[0])) ficha.localizacion = `${lugaresTexto}. ${actualLugar}`;
+    }
     if (esControl && evolucionElegida) {
       const frase = `Se siente ${evolucionElegida.toLowerCase()} que en la consulta anterior.`;
       if (!String(ficha.evolucion || "").startsWith(frase)) {
@@ -762,6 +819,20 @@ export default function Home() {
     window.scrollTo({ top: 0 });
   }
 
+  const pantallas = PANTALLAS_INICIO[modo];
+  const indicePantalla = Math.max(0, pantallas.findIndex(([id]) => id === pantalla));
+
+  function irAPantalla(id) {
+    setPantalla(id);
+    setError("");
+    window.scrollTo({ top: 0 });
+  }
+
+  function moverPantalla(delta) {
+    const destino = pantallas[Math.min(pantallas.length - 1, Math.max(0, indicePantalla + delta))];
+    irAPantalla(destino[0]);
+  }
+
   async function analizar() {
     if (!audio && !texto.trim() && !motivoElegido) {
       setError("Elige por qué consultas, graba un audio o escribe qué te sucede para continuar.");
@@ -778,6 +849,7 @@ export default function Home() {
         intensidadElegida,
         evolucionElegida: esControl ? evolucionElegida : "",
         mediciones: medicionesTexto,
+        localizacionElegida: lugaresTexto,
         yaPreguntados: "[]",
       });
       // Lo que el paciente eligió con un toque manda sobre lo que la IA haya resumido del relato.
@@ -956,6 +1028,8 @@ export default function Home() {
     setTexto("");
     setMotivo(MOTIVO_VACIO);
     setMediciones({});
+    setLugares([]);
+    setPantalla("tipo");
     setEvolucionElegida("");
     setAudio(null);
     setTranscripcion("");
@@ -993,6 +1067,13 @@ export default function Home() {
     .filter(Boolean);
 
   const opcionesActuales = OPCIONES_POR_CAMPO[campoActual];
+
+  // Avance: lo que ya tiene la ficha más lo que se respondió en esta ronda.
+  const respondidosAhora = preguntas
+    .filter((_, i) => respuestas[i]?.texto?.trim() || respuestas[i]?.audio)
+    .map((p) => p.campo);
+  const porcentajeEntrevista = porcentajeCompleto(ficha, modo, datos, respondidosAhora);
+  const porcentajeFinal = porcentajeCompleto(ficha, modo, datos);
 
   // Botones de opciones: agregan o quitan la opción del texto de la respuesta.
   function marcarOpcion(opcion) {
@@ -1064,14 +1145,6 @@ export default function Home() {
           ))}
         </ol>
 
-        {paso === 0 && (
-          <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
-            <strong className="font-semibold">No te responde un médico:</strong> armas tu ficha y tú se la
-            envías. No da diagnósticos ni tratamientos. Si tienes una emergencia, busca atención médica de
-            inmediato.
-          </p>
-        )}
-
         {alarma && paso > 0 && (
           <div role="alert" className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-red-900">
             <p className="text-sm font-semibold">Busca atención médica ahora</p>
@@ -1079,115 +1152,191 @@ export default function Home() {
           </div>
         )}
 
-        {/* Paso 1: tipo de consulta, datos generales y relato */}
+        {/* Paso 1: por pantallas cortas (tipo de consulta, datos, motivo, medidas y relato) */}
         {paso === 0 && (
           <>
-            <SelectorDeModo modo={modo} onElegir={elegirModo} deshabilitado={cargando} />
-
-            {esControl && guardada && <FichaGuardada registro={guardada} onBorrar={borrarGuardada} onCambiarBase={cambiarBase} />}
-            {esControl && !guardada && (
-              <p className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
-                {estadoGuardado === "borrada"
-                  ? "Borramos la ficha guardada. "
-                  : "No hay una ficha guardada en este teléfono. "}
-                Puedes continuar igual: te preguntaremos lo necesario.
-              </p>
-            )}
-
-            <section className={tarjeta}>
-              <h2 className="text-lg font-semibold">Datos generales</h2>
-              <DatosGenerales datos={datos} onChange={cambiarDato} />
-            </section>
-
-            {!esControl && <MotivoDeConsulta motivo={motivo} onCambiar={setMotivo} deshabilitado={cargando} />}
-
-            <section className={tarjeta}>
-              <h2 className="text-lg font-semibold">
-                {esControl ? PREGUNTA_DE_CONTROL : motivo.eleccion ? "Ahora cuéntanos qué pasó" : "Cuéntanos qué te sucede"}
-              </h2>
-              <p className="mt-1 mb-4 text-sm text-slate-600">
-                {esControl
-                  ? "Cuéntanos si mejoraste, si algo cambió y si pudiste seguir las indicaciones. Puedes grabar un audio, escribirlo, o ambos."
-                  : "Habla como se lo contarías a tu médico: qué sientes, desde cuándo y qué has hecho. Puedes grabar un audio, escribirlo, o ambos."}
-              </p>
-              {esControl && (
-                <EscalaOpciones
-                  id="evolucion"
-                  titulo="Comparado con tu consulta anterior, te sientes:"
-                  opciones={ESCALA_EVOLUCION}
-                  valor={evolucionElegida}
-                  onCambiar={setEvolucionElegida}
-                  deshabilitado={cargando}
+            <nav aria-label="Pantallas del paso 1" className="flex items-center gap-1.5" data-pantallas>
+              {pantallas.map(([id, nombre], i) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => irAPantalla(id)}
+                  aria-label={`Ir a: ${nombre}`}
+                  aria-current={id === pantalla ? "step" : undefined}
+                  className={`h-2 flex-1 rounded-full transition-colors focus:outline-none focus:ring-4 focus:ring-marca/25 ${
+                    i <= indicePantalla ? "bg-marca" : "bg-slate-200 hover:bg-slate-300"
+                  }`}
                 />
-              )}
-              <div className={esControl ? "mt-4" : ""}>
-                <Grabadora audio={audio} onAudio={setAudio} deshabilitada={cargando} />
-              </div>
-              <label htmlFor="texto" className={`${etiqueta} mt-4`}>
-                O escríbelo aquí
-              </label>
-              <textarea
-                id="texto"
-                rows={4}
-                maxLength={4000}
-                value={texto}
-                onChange={(e) => setTexto(e.target.value)}
-                placeholder={
-                  esControl
-                    ? "Ejemplo: el dolor bajó mucho, pero a veces me da en la noche. Tomé la medicina como me dijeron..."
-                    : "Ejemplo: desde hace tres días tengo dolor de cabeza por las tardes..."
-                }
-                className={campo}
-              />
-              <Fotos
-                fotos={fotos}
-                onCambiar={setFotos}
-                tipo="lesion"
-                titulo="Fotos de lo que te molesta"
-                ayuda="Por ejemplo una roncha, una herida o una inflamación. Solo van en el PDF para tu médico: no se envían a la IA ni se guardan. No incluyas tu cara."
-                deshabilitado={cargando}
-              />
-            </section>
+              ))}
+            </nav>
+            <p className="-mt-3 text-sm text-slate-500">
+              {indicePantalla + 1} de {pantallas.length} ·{" "}
+              <span className="font-medium text-tinta">{pantallas[indicePantalla][1]}</span>
+            </p>
 
-            <details className={tarjeta} data-mediciones>
-              <summary className="cursor-pointer list-none text-lg font-semibold [&::-webkit-details-marker]:hidden">
-                ¿Te mediste algo en casa? <span className="text-sm font-normal text-slate-500">(opcional)</span>
-              </summary>
-              <p className="mt-1 text-sm text-slate-600">
-                Si tienes termómetro, tensiómetro o glucómetro, anota lo que marcó. Si no, déjalo en blanco.
-              </p>
-              <div className="mt-4 grid grid-cols-2 gap-4">
-                {MEDICIONES.map((m) => (
-                  <div key={m.id}>
-                    <label htmlFor={`medicion-${m.id}`} className={etiqueta}>
-                      {m.etiqueta} <span className="font-normal text-slate-500">({m.unidad})</span>
-                    </label>
-                    <input
-                      id={`medicion-${m.id}`}
-                      type="text"
-                      inputMode={m.modo}
-                      maxLength={12}
-                      value={mediciones[m.id] ?? ""}
-                      onChange={(e) => setMediciones((v) => ({ ...v, [m.id]: e.target.value }))}
-                      placeholder={m.ejemplo}
-                      className={campo}
-                    />
+            <div key={pantalla} className="animar-entrada flex flex-col gap-5">
+              {pantalla === "tipo" && (
+                <>
+                  <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
+                    <strong className="font-semibold">No te responde un médico:</strong> armas tu ficha y tú se la
+                    envías. No da diagnósticos ni tratamientos. Si tienes una emergencia, busca atención médica de
+                    inmediato.
+                  </p>
+                  <SelectorDeModo modo={modo} onElegir={elegirModo} deshabilitado={cargando} />
+                  {esControl && guardada && (
+                    <FichaGuardada registro={guardada} onBorrar={borrarGuardada} onCambiarBase={cambiarBase} />
+                  )}
+                  {esControl && !guardada && (
+                    <p className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+                      {estadoGuardado === "borrada"
+                        ? "Borramos la ficha guardada. "
+                        : "No hay una ficha guardada en este teléfono. "}
+                      Puedes continuar igual: te preguntaremos lo necesario.
+                    </p>
+                  )}
+                </>
+              )}
+
+              {pantalla === "datos" && (
+                <section className={tarjeta}>
+                  <h2 className="text-lg font-semibold">Tus datos</h2>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Tu nombre, tu municipio y tu contacto no se envían a la IA: solo van en la ficha para tu médico.
+                  </p>
+                  <DatosGenerales datos={datos} onChange={cambiarDato} />
+                </section>
+              )}
+
+              {pantalla === "motivo" && (
+                <>
+                  <MotivoDeConsulta motivo={motivo} onCambiar={setMotivo} deshabilitado={cargando} />
+                  <section className={tarjeta}>
+                    <h2 className="text-lg font-semibold">
+                      ¿Dónde te molesta? <span className="text-sm font-normal text-slate-500">(opcional)</span>
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-600">Toca una o varias partes del cuerpo.</p>
+                    <MapaDelCuerpo elegidos={lugares} onCambiar={setLugares} titulo="" deshabilitado={cargando} />
+                  </section>
+                </>
+              )}
+
+              {pantalla === "medidas" && (
+                <section className={tarjeta} data-mediciones>
+                  <h2 className="text-lg font-semibold">
+                    ¿Te mediste algo en casa? <span className="text-sm font-normal text-slate-500">(opcional)</span>
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Si tienes termómetro, tensiómetro o glucómetro, anota lo que marcó. Si no, toca Siguiente.
+                  </p>
+                  <div className="mt-4 grid grid-cols-2 gap-4">
+                    {MEDICIONES.map((m) => (
+                      <div key={m.id}>
+                        <label htmlFor={`medicion-${m.id}`} className={etiqueta}>
+                          {m.etiqueta} <span className="font-normal text-slate-500">({m.unidad})</span>
+                        </label>
+                        <input
+                          id={`medicion-${m.id}`}
+                          type="text"
+                          inputMode={m.modo}
+                          maxLength={12}
+                          value={mediciones[m.id] ?? ""}
+                          onChange={(e) => setMediciones((v) => ({ ...v, [m.id]: e.target.value }))}
+                          placeholder={m.ejemplo}
+                          className={campo}
+                        />
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </details>
+                </section>
+              )}
+
+              {pantalla === "relato" && (
+                <section className={tarjeta}>
+                  <h2 className="text-lg font-semibold">
+                    {esControl ? PREGUNTA_DE_CONTROL : motivo.eleccion ? "Ahora cuéntanos qué pasó" : "Cuéntanos qué te sucede"}
+                  </h2>
+                  <p className="mt-1 mb-4 text-sm text-slate-600">
+                    {esControl
+                      ? "Cuéntanos si mejoraste, si algo cambió y si pudiste seguir las indicaciones. Puedes grabar un audio, escribirlo, o ambos."
+                      : "Habla como se lo contarías a tu médico: qué sientes, desde cuándo y qué has hecho. Puedes grabar un audio, escribirlo, o ambos."}
+                  </p>
+                  {esControl && (
+                    <EscalaOpciones
+                      id="evolucion"
+                      titulo="Comparado con tu consulta anterior, te sientes:"
+                      opciones={ESCALA_EVOLUCION}
+                      valor={evolucionElegida}
+                      onCambiar={setEvolucionElegida}
+                      deshabilitado={cargando}
+                    />
+                  )}
+                  <div className={esControl ? "mt-4" : ""}>
+                    <Grabadora audio={audio} onAudio={setAudio} deshabilitada={cargando} />
+                  </div>
+                  <label htmlFor="texto" className={`${etiqueta} mt-4`}>
+                    O escríbelo aquí
+                  </label>
+                  <textarea
+                    id="texto"
+                    rows={4}
+                    maxLength={4000}
+                    value={texto}
+                    onChange={(e) => setTexto(e.target.value)}
+                    placeholder={
+                      esControl
+                        ? "Ejemplo: el dolor bajó mucho, pero a veces me da en la noche. Tomé la medicina como me dijeron..."
+                        : "Ejemplo: desde hace tres días tengo dolor de cabeza por las tardes..."
+                    }
+                    className={campo}
+                  />
+                  <Fotos
+                    fotos={fotos}
+                    onCambiar={setFotos}
+                    tipo="lesion"
+                    titulo="Fotos de lo que te molesta"
+                    ayuda="Por ejemplo una roncha, una herida o una inflamación. Solo van en el PDF para tu médico: no se envían a la IA ni se guardan. No incluyas tu cara."
+                    deshabilitado={cargando}
+                  />
+                </section>
+              )}
+            </div>
 
             {error && (
               <p role="alert" className="text-sm font-medium text-red-700">
                 {error}
               </p>
             )}
-            <button type="button" onClick={analizar} disabled={cargando} className={botonPrincipal}>
-              {cargando ? "Analizando lo que nos contaste…" : "Continuar"}
-            </button>
-            {cargando && (
-              <p className="-mt-2 text-center text-sm text-slate-500">Puede tardar unos segundos.</p>
-            )}
+            <div className="flex gap-3">
+              {indicePantalla > 0 && (
+                <button
+                  type="button"
+                  onClick={() => moverPantalla(-1)}
+                  disabled={cargando}
+                  className={`${botonSecundario} flex-1`}
+                >
+                  Atrás
+                </button>
+              )}
+              {pantalla === "relato" ? (
+                <button type="button" onClick={analizar} disabled={cargando} className={`${botonPrincipal} flex-[2]`}>
+                  {cargando ? "Analizando lo que nos contaste…" : "Continuar"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => moverPantalla(1)}
+                  disabled={cargando}
+                  className={`${botonPrincipal} flex-[2]`}
+                >
+                  {pantalla === "medidas" && !medicionesTexto
+                    ? "Siguiente (no me medí)"
+                    : pantalla === "motivo" && !motivo.eleccion
+                      ? "Siguiente (prefiero contarlo)"
+                      : "Siguiente"}
+                </button>
+              )}
+            </div>
+            {cargando && <p className="-mt-2 text-center text-sm text-slate-500">Puede tardar unos segundos.</p>}
           </>
         )}
 
@@ -1208,7 +1357,12 @@ export default function Home() {
               </p>
             )}
 
-            <section className={tarjeta}>
+            <AvanceDeFicha porcentaje={porcentajeEntrevista} />
+
+            <section key={`${ronda}-${actual}`} className={`${tarjeta} animar-entrada`}>
+              <p className="mb-3 text-sm font-medium text-marca" data-animo>
+                {mensajeDeAnimo({ actual, total: preguntas.length, ronda })}
+              </p>
               <div className="flex items-center gap-3">
                 <p className="shrink-0 text-sm font-medium text-teal-800">
                   Pregunta {actual + 1} de {preguntas.length}
@@ -1237,6 +1391,14 @@ export default function Home() {
                   maxSegundos={SEGUNDOS_POR_RESPUESTA}
                 />
               </div>
+              {campoActual === "localizacion" && (
+                <MapaDelCuerpo
+                  titulo="Toca dónde es"
+                  elegidos={elegidas}
+                  onCambiar={(lista) => cambiarRespuesta(actual, { texto: lista.join(", ") })}
+                  deshabilitado={cargando}
+                />
+              )}
               {campoActual === "intensidad" && (
                 <EscalaNumerica
                   id="intensidad-pregunta"
@@ -1343,6 +1505,28 @@ export default function Home() {
         {/* Paso 3: la ficha como hoja, editable al tocar, guardado y envío */}
         {paso === 2 && (
           <>
+            <section className={`${tarjeta} animar-entrada flex items-center gap-4`} data-lista>
+              <svg viewBox="0 0 48 48" className="animar-check h-14 w-14 shrink-0" aria-hidden="true">
+                <circle cx="24" cy="24" r="22" className="fill-marca" />
+                <path
+                  d="M14 25l7 7 13-15"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="animar-trazo"
+                />
+              </svg>
+              <div>
+                <h2 className="text-xl font-semibold">¡Tu ficha está lista!</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Quedó {porcentajeFinal}% completa
+                  {fotos.length > 0 && ` y con ${fotos.length} ${fotos.length === 1 ? "foto" : "fotos"}`}. Revísala y
+                  envíala a tu médico.
+                </p>
+              </div>
+            </section>
             <p className="text-sm text-slate-600">
               Así la verá tu médico. Toca cualquier dato para corregirlo o completarlo.
             </p>

@@ -29,3 +29,54 @@ h3 {
   color: var(--color-tinta);
   letter-spacing: -0.01em;
 }
+
+/* Transiciones suaves entre pantallas y preguntas, y el check de "¡Tu ficha está lista!". */
+@keyframes entrar {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes aparecer-check {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes trazar {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.animar-entrada {
+  animation: entrar 0.28s ease-out both;
+}
+.animar-check {
+  animation: aparecer-check 0.5s ease-out both;
+}
+.animar-trazo {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: trazar 0.45s 0.25s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animar-entrada,
+  .animar-check {
+    animation: none;
+  }
+  .animar-trazo {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}

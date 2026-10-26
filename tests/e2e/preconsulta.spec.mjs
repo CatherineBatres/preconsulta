@@ -12,6 +12,11 @@ async function grabar(page, milisegundos = 1500) {
   await expect(page.locator("audio")).toBeVisible();
 }
 
+// El paso 1 va por pantallas: "Tipo de consulta", "Tus datos", "Motivo", "Medidas" y "Tu relato".
+async function ir(page, pantalla) {
+  await page.getByRole("button", { name: `Ir a: ${pantalla}` }).click();
+}
+
 async function simularCompartir(page) {
   await page.evaluate(() => {
     window.compartido = null;
@@ -30,20 +35,35 @@ test.beforeEach(async ({ page }) => {
 test("primera vez: preguntas en rondas hasta llenar la ficha, PDF y guardado en el teléfono", async ({ page }) => {
   await page.goto("/");
 
-  // Paso 1: no deja continuar sin relato
-  await page.getByRole("button", { name: "Continuar" }).click();
-  await expect(page.getByText("Elige por qué consultas, graba un audio o escribe qué te sucede")).toBeVisible();
-
+  // Paso 1, por pantallas: tipo de consulta → datos → motivo → medidas → relato
+  await expect(page.getByText("1 de 5")).toBeVisible();
   await expect(page.getByRole("button", { name: /Primera vez/ })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Siguiente", exact: true }).click();
   await page.locator("#nombre").fill("María López");
   await page.locator("#edad").fill("34");
   await page.locator("#sexo").selectOption("Femenino");
+  await page.getByRole("button", { name: "Siguiente", exact: true }).click();
+  await page.getByRole("button", { name: "Siguiente (prefiero contarlo)" }).click();
+  await page.getByRole("button", { name: "Siguiente (no me medí)" }).click();
+  await expect(page.getByText("5 de 5")).toBeVisible();
+
+  // No deja continuar sin relato
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(page.getByText("Elige por qué consultas, graba un audio o escribe qué te sucede")).toBeVisible();
+  await page.getByRole("button", { name: "Atrás" }).click();
+  await expect(page.getByText("4 de 5")).toBeVisible();
+  await page.getByRole("button", { name: "Siguiente (no me medí)" }).click();
   await grabar(page, 2000);
   await page.getByRole("button", { name: "Continuar" }).click();
 
-  // Ronda 1: texto, audio y "No sé"
+  // Ronda 1: texto, audio y "No sé", con avance y ánimo
   await expect(page.getByText("Pregunta 1 de 3")).toBeVisible();
+  await expect(page.locator("[data-animo]")).toContainText("¡Empecemos!");
+  const avanceInicial = Number(await page.getByRole("progressbar").getAttribute("aria-valuenow"));
   await page.locator("#respuesta").fill("Como dos horas");
+  await expect
+    .poll(async () => Number(await page.getByRole("progressbar").getAttribute("aria-valuenow")))
+    .toBeGreaterThan(avanceInicial);
   await page.getByRole("button", { name: "Siguiente pregunta" }).click();
   await expect(page.getByText("Pregunta 2 de 3")).toBeVisible();
   await expect(page.locator("#respuesta")).toHaveValue("");
@@ -62,6 +82,8 @@ test("primera vez: preguntas en rondas hasta llenar la ficha, PDF y guardado en 
   await page.getByRole("button", { name: "No aplica" }).click();
 
   // Paso 3: la ficha completa
+  await expect(page.getByRole("heading", { name: "¡Tu ficha está lista!" })).toBeVisible();
+  await expect(page.locator("[data-lista]")).toContainText(/Quedó \d+% completa/);
   await expect(page.getByRole("heading", { name: "Envíala a tu médico" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Ficha previa a la consulta" })).toBeVisible();
   await expect(page.locator("#ficha-intensidad")).toHaveValue("Moderada, 6 de 10");
@@ -94,9 +116,11 @@ test("primera vez: preguntas en rondas hasta llenar la ficha, PDF y guardado en 
 
 test("el motivo elegido con un toque queda como motivo de consulta con su tiempo de evolución", async ({ page }) => {
   await page.goto("/");
+  await ir(page, "Motivo");
   await page.getByRole("button", { name: "Fiebre", exact: true }).click();
   await page.locator("#motivo-cantidad").fill("5");
   await expect(page.getByText("En tu ficha dirá:")).toContainText("Fiebre de 5 días de evolución");
+  await ir(page, "Tu relato");
   await expect(page.getByRole("heading", { name: "Ahora cuéntanos qué pasó" })).toBeVisible();
   await page.locator("#texto").fill("Empecé el lunes con diarrea y luego me dio fiebre en las noches.");
 
@@ -113,7 +137,9 @@ test("el motivo elegido con un toque queda como motivo de consulta con su tiempo
 
 test("si responde solo 'sí' le pide el detalle, y las enfermedades se marcan con un toque", async ({ page }) => {
   await page.goto("/");
+  await ir(page, "Tus datos");
   await page.locator("#ocupacion").fill("Maestra");
+  await ir(page, "Tu relato");
   await page.locator("#texto").fill("Tengo tos. SIMULAR_ANTECEDENTES");
   await page.getByRole("button", { name: "Continuar" }).click();
 
@@ -157,6 +183,7 @@ const foto = (nombre) => ({ name: nombre, mimeType: "image/png", buffer: PNG_1X1
 
 test("las fotos van solo en el PDF: no se envían a la IA", async ({ page }) => {
   await page.goto("/");
+  await ir(page, "Tu relato");
   await page.locator("#texto").fill("Me salió una roncha en el brazo desde hace tres días.");
   const entrada = page.locator('[data-entrada-fotos="lesion"]');
   await entrada.setInputFiles([foto("roncha.png"), foto("roncha2.png")]);
@@ -198,7 +225,9 @@ test("las fotos van solo en el PDF: no se envían a la IA", async ({ page }) => 
 
 test("escalas del 1 al 10, mediciones en casa y municipio quedan en la ficha", async ({ page }) => {
   await page.goto("/");
+  await ir(page, "Tus datos");
   await page.locator("#municipio").fill("Mixco");
+  await ir(page, "Motivo");
   await page.getByRole("button", { name: "Fiebre", exact: true }).click();
   await page.locator("#motivo-cantidad").fill("2");
   const escala = page.locator('[data-escala="intensidad-motivo"]');
@@ -206,9 +235,11 @@ test("escalas del 1 al 10, mediciones en casa y municipio quedan en la ficha", a
   await expect(escala.getByRole("radio", { name: "7 de 10" })).toHaveAttribute("aria-checked", "true");
   await expect(escala).toContainText("7 de 10 · Fuerte");
 
-  await page.locator("[data-mediciones] summary").click();
+  await page.getByRole("button", { name: "Siguiente", exact: true }).click();
+  await expect(page.locator("[data-mediciones]")).toBeVisible();
   await page.locator("#medicion-temperatura").fill("38.5");
   await page.locator("#medicion-presion").fill("120/80");
+  await page.getByRole("button", { name: "Siguiente", exact: true }).click();
   await page.locator("#texto").fill("Tengo fiebre desde ayer.");
   const peticion = page.waitForRequest("**/api/ficha");
   await page.getByRole("button", { name: "Continuar" }).click();
@@ -230,8 +261,10 @@ test("escalas del 1 al 10, mediciones en casa y municipio quedan en la ficha", a
 
 test("en una mujer pregunta lo gineco-obstétrico con 'Prefiero no decir', y la intensidad se toca en la escala", async ({ page }) => {
   await page.goto("/");
+  await ir(page, "Tus datos");
   await page.locator("#sexo").selectOption("Femenino");
   await page.locator("#edad").fill("29");
+  await ir(page, "Tu relato");
   await page.locator("#texto").fill("Me duele el estómago. SIMULAR_GINECO");
   await page.getByRole("button", { name: "Continuar" }).click();
 
@@ -257,6 +290,7 @@ test("en una mujer pregunta lo gineco-obstétrico con 'Prefiero no decir', y la 
 
 test("en una pregunta de intensidad, la escala escribe 'N de 10' sin borrar lo demás", async ({ page }) => {
   await page.goto("/");
+  await ir(page, "Tu relato");
   await page.locator("#texto").fill("Dolor de cabeza por las tardes.");
   await page.getByRole("button", { name: "Continuar" }).click();
   // La primera ronda simulada pregunta por la intensidad
@@ -269,6 +303,32 @@ test("en una pregunta de intensidad, la escala escribe 'N de 10' sin borrar lo d
   await expect(page.locator("#respuesta")).toHaveValue("9 de 10. me late la cabeza");
   await expect(escala).toContainText("9 de 10 · Muy fuerte");
   await expect(page.getByRole("button", { name: "Prefiero no decir" })).toHaveCount(0);
+});
+
+test("mapa del cuerpo: se toca dónde molesta, de frente y de espalda, y queda en 'Dónde'", async ({ page }) => {
+  await page.goto("/");
+  await ir(page, "Motivo");
+  await page.getByRole("button", { name: "Dolor de estómago" }).click();
+  const mapa = page.locator("[data-mapa-cuerpo]");
+  await mapa.getByRole("button", { name: "Abdomen arriba, lado derecho", exact: true }).click();
+  await expect(mapa.getByRole("button", { name: "Abdomen arriba, lado derecho", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await mapa.getByRole("button", { name: "De espalda" }).click();
+  await mapa.getByRole("button", { name: "Espalda baja, lado derecho", exact: true }).click();
+  await expect(mapa.getByRole("list", { name: "Lugares elegidos" })).toContainText("Abdomen arriba, lado derecho");
+  await expect(mapa.getByRole("list", { name: "Lugares elegidos" })).toContainText("Espalda baja, lado derecho");
+  await mapa.getByRole("button", { name: "Quitar Espalda baja, lado derecho" }).click();
+  await expect(mapa.getByRole("list", { name: "Lugares elegidos" })).not.toContainText("Espalda baja");
+
+  await ir(page, "Tu relato");
+  await page.locator("#texto").fill("Me duele después de comer.");
+  const peticion = page.waitForRequest("**/api/ficha");
+  await page.getByRole("button", { name: "Continuar" }).click();
+  expect((await peticion).postData()).toContain("Abdomen arriba, lado derecho");
+  for (let i = 0; i < 5; i++) {
+    if (await page.getByRole("heading", { name: "Envíala a tu médico" }).isVisible()) break;
+    await page.getByRole("button", { name: "No sé" }).click();
+  }
+  await expect(page.locator("#ficha-localizacion")).toHaveValue("Abdomen arriba, lado derecho");
 });
 
 test("consulta de control: retoma la ficha guardada y pregunta por la evolución", async ({ page }) => {
@@ -289,7 +349,10 @@ test("consulta de control: retoma la ficha guardada y pregunta por la evolución
   await page.getByRole("button", { name: /Control o seguimiento/ }).click();
   await expect(page.getByRole("heading", { name: "Tu ficha guardada" })).toBeVisible();
   await expect(page.getByText("Losartán 50 mg")).toBeVisible();
+  await expect(page.getByText("1 de 4")).toBeVisible(); // en control no hay pantalla de motivo
+  await ir(page, "Tus datos");
   await expect(page.locator("#nombre")).toHaveValue("María López");
+  await ir(page, "Tu relato");
   await expect(
     page.getByRole("heading", {
       name: "¿Cómo evolucionaron tus síntomas desde la consulta anterior y cómo te fue con el tratamiento?",
@@ -371,6 +434,7 @@ test("en control se pueden editar los antecedentes sin borrar el historial", asy
   expect(guardado.historial).toHaveLength(2);
 
   // La consulta usa los antecedentes nuevos
+  await ir(page, "Tu relato");
   await page.locator("#texto").fill("Sigo mejor, ya casi no me duele.");
   const peticion = page.waitForRequest("**/api/ficha");
   await page.getByRole("button", { name: "Continuar" }).click();
@@ -400,6 +464,7 @@ test("se puede borrar la ficha guardada", async ({ page }) => {
 
 test("muestra el aviso de alarma ante un dolor de pecho", async ({ page }) => {
   await page.goto("/");
+  await ir(page, "Tu relato");
   await page.locator("#texto").fill("Tengo dolor de pecho desde hace una hora");
   await page.getByRole("button", { name: "Continuar" }).click();
   await expect(page.getByText("Busca atención médica ahora")).toBeVisible();
@@ -407,6 +472,7 @@ test("muestra el aviso de alarma ante un dolor de pecho", async ({ page }) => {
 
 test("explica el error cuando la IA llega a su límite de uso", async ({ page }) => {
   await page.goto("/");
+  await ir(page, "Tu relato");
   await page.locator("#texto").fill("SIMULAR_LIMITE");
   await page.getByRole("button", { name: "Continuar" }).click();
   await expect(page.getByText("Se alcanzó el límite de uso de la IA")).toBeVisible({ timeout: 45_000 });
@@ -455,6 +521,7 @@ test.describe("en computadora", () => {
   test("transcribe en vivo, deja volver a escuchar y grabar de nuevo", async ({ page }) => {
     await page.addInitScript(reconocimientoFalso);
     await page.goto("/");
+    await ir(page, "Tu relato");
 
     await page.getByRole("button", { name: "Grabar" }).click();
     const enVivo = page.locator("[data-transcripcion-en-vivo]");
@@ -484,6 +551,7 @@ test.describe("en computadora", () => {
       delete window.webkitSpeechRecognition;
     });
     await page.goto("/");
+    await ir(page, "Tu relato");
     await page.getByRole("button", { name: "Grabar" }).click();
     await expect(page.getByText("Este navegador no muestra el texto mientras hablas")).toBeVisible();
     await page.waitForTimeout(800);
@@ -496,6 +564,7 @@ test.describe("en computadora", () => {
 test("en el teléfono no usa el reconocimiento de voz, para no cortar la grabación", async ({ page }) => {
   await page.addInitScript(reconocimientoFalso); // aunque el navegador lo tenga
   await page.goto("/");
+  await ir(page, "Tu relato");
   await page.getByRole("button", { name: "Grabar" }).click();
   await expect(page.getByText("Te estamos escuchando")).toBeVisible();
   await page.waitForTimeout(800);
