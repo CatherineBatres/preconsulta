@@ -2,6 +2,35 @@
 
 Registro de las decisiones del proyecto: qué se decidió, por qué y qué se descartó. Las más recientes van primero.
 
+## 10. Fotos solo dentro del PDF (26 de octubre de 2026)
+
+**Contexto.** Unos tres médicos de turno revisaron la app (por medio del Paciente 2) y pidieron poder agregar fotos: de una lesión (roncha, herida, inflamación) para ver qué tipo es, y de los medicamentos, porque la gente confunde sus nombres.
+
+**Decisión.**
+- En el paso 1, "Fotos de lo que te molesta"; en las preguntas de medicamentos o de lo que ha tomado, "Fotos de tus medicamentos". Hasta 3 de cada tipo.
+- El teléfono achica cada foto (máximo 1280 px, JPEG) para que el PDF pese poco y se pueda mandar por WhatsApp.
+- Las fotos aparecen en la ficha y en el PDF, en una sección "Fotos adjuntas por el paciente". El mensaje de texto avisa cuántas hay en el PDF.
+- **No se envían a la IA ni se guardan** en el teléfono. Al empezar una ficha nueva se borran.
+- Un aviso pide no incluir la cara.
+
+**Por qué.** Una foto del cuerpo es información de salud muy sensible, y que la IA la interprete sería acercarse a un diagnóstico, que la app no hace. Al médico sí le sirve verla, y el PDF es lo que él recibe.
+
+**Qué se descartó.** Que la IA lea la caja del medicamento para llenar nombre y dosis: puede servir, pero las etiquetas de farmacia a veces traen el nombre del paciente; queda para después. Guardar las fotos en el historial del teléfono: ocupan mucho espacio y no hacen falta en la siguiente consulta.
+
+## 9. Antecedentes como los pide el médico (23 de octubre de 2026)
+
+**Contexto.** El Médico 1 probó la app y compartió el formulario en papel que usa su consultorio antes de cada cita. Dijo que respondió varias preguntas con "sí" o "no" y que la app no le preguntó cuál; que en medicamentos hace falta saber cada cuánto y desde cuándo; y que las preguntas de antecedentes deben ser más específicas.
+
+**Decisión.**
+- Si el paciente responde solo "sí", la app le pide el detalle antes de seguir ("¿A qué eres alérgico y qué te pasa?"). Si vuelve a tocar Siguiente, lo deja pasar, y la ficha dice "Refiere que sí, sin especificar" para que el médico lo pregunte.
+- La IA ya no hace preguntas que se contesten solo con sí o no, y da ejemplos en la pregunta.
+- Medicamentos con nombre, dosis, cada cuánto, desde cuándo y para qué, uno por línea, con un ejemplo en el cuadro de respuesta.
+- Enfermedades frecuentes para marcar con un toque, como en su formulario (presión alta, diabetes, colesterol, asma, tiroides…), además de "Ninguna".
+- Antecedentes en su orden: alergias, enfermedades, cirugías y hospitalizaciones, medicamentos.
+- Ocupación (opcional) en los datos generales.
+
+**Qué se descartó.** Los datos administrativos de su formulario (seguro médico, póliza, DPI, NIT para factura, quién lo refiere): son trámites del consultorio y datos sensibles que la app no necesita pedir ni enviar a la IA. Las preguntas propias de su especialidad (alergia al contraste yodado, problemas vasculares): PreConsulta es general.
+
 ## 8. Sin transcripción en vivo en teléfonos (20 de octubre de 2026)
 
 **Contexto.** En la revisión del 14 de octubre se señaló un riesgo (Issue #2): en Android Chrome y en iPhone Safari, usar el reconocimiento de voz del navegador al mismo tiempo que la grabación puede cortar o silenciar el audio, porque los dos usan el micrófono. Ese audio es lo que la IA usa para armar la ficha.

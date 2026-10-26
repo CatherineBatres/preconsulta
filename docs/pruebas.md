@@ -1,14 +1,16 @@
 # Pruebas
 
-**Pruebas unitarias** (26): revisan los ayudantes de la ficha (incluido el motivo con su tiempo de evolución), las reglas de las preguntas, la ficha guardada, la edición de antecedentes y el historial, con el ejecutor de pruebas que trae Node. No necesitan navegador ni llave:
+**Pruebas unitarias** (30): revisan los ayudantes de la ficha (incluido el motivo con su tiempo de evolución, la detección de un "sí" sin detalle y el orden de los antecedentes y el aviso de fotos en el mensaje de texto), las reglas de las preguntas, la ficha guardada, la edición de antecedentes y el historial, con el ejecutor de pruebas que trae Node. No necesitan navegador ni llave:
 
 ```bash
 npm test
 ```
 
-**Pruebas de punta a punta** (12): abren la app real en un Chrome del tamaño de un teléfono, con un micrófono simulado, y recorren:
+**Pruebas de punta a punta** (14): abren la app real en un Chrome del tamaño de un teléfono, con un micrófono simulado, y recorren:
 - una primera vez con dos rondas de preguntas, las respuestas rápidas y la marca "Sin respuesta", el PDF y el guardado en el teléfono;
 - el motivo elegido con un toque ("Fiebre de 5 días de evolución"), que ninguna ronda de la IA puede cambiar;
+- la repregunta cuando el paciente responde solo "sí", los botones de enfermedades y la ocupación;
+- las fotos de la lesión y del medicamento: aparecen en la ficha y en el PDF, y nunca van en lo que se envía a la IA;
 - un control que carga la ficha guardada, pregunta por la evolución y suma la visita al historial;
 - la edición de antecedentes en control sin perder el historial;
 - el borrado de la ficha guardada;

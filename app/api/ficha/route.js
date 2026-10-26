@@ -34,6 +34,13 @@ Orden de las preguntas (como en un interrogatorio médico):
 - Pide medidas concretas: para la intensidad, una escala del 1 al 10 y la medida propia del síntoma (cuántos grados de fiebre, cuántas veces ha vomitado o ido al baño).
 - Si hay diarrea o vómitos, pregunta en "intensidad" cuántas veces y si está tomando agua o suero.
 
+Preguntas que no se respondan solo con sí o no (lo pidió el médico):
+- Pregunta directamente por el detalle. En vez de "¿Eres alérgico a algún medicamento?", pregunta "¿Eres alérgico a algún medicamento o alimento? Si sí, ¿a cuál y qué te pasa?".
+- En "enfermedades", menciona ejemplos para que el paciente entienda: "¿Tienes alguna enfermedad, como presión alta, diabetes, asma o tiroides? ¿Desde cuándo?".
+- En "medicamentos", pide de cada uno: nombre, dosis, cada cuánto, desde cuándo y para qué. Escríbelos en la ficha uno por línea, por ejemplo "Losartán 50 mg, 1 al día en la mañana, desde hace 2 años, para la presión".
+- En "cirugias", pregunta qué cirugía y en qué año, y si ha estado hospitalizado más de 3 días.
+- Si el paciente responde solo "sí" sin decir cuál, escribe en ese campo "Refiere que sí, sin especificar" para que el médico lo pregunte.
+
 MODO primera: es la primera vez que el paciente usa la app. Deja "evolucion" y "tratamiento" vacíos y no preguntes por ellos.
 
 MODO control: el paciente vuelve después de una consulta anterior y respondió primero a la pregunta "¿Cómo evolucionaron tus síntomas desde la consulta anterior y cómo te fue con el tratamiento?".
@@ -111,6 +118,7 @@ export async function POST(request) {
   const modo = esModoValido(modoPedido) ? modoPedido : "primera";
   const edad = String(formulario.get("edad") || "").slice(0, 3);
   const sexo = String(formulario.get("sexo") || "").slice(0, 30);
+  const ocupacion = String(formulario.get("ocupacion") || "").slice(0, 60).trim();
   const texto = String(formulario.get("texto") || "").slice(0, MAX_TEXTO).trim();
   const motivoElegido = String(formulario.get("motivoElegido") || "").slice(0, 200).trim();
   const permitidos = new Set(camposPreguntables(modo));
@@ -151,7 +159,7 @@ export async function POST(request) {
   const lineas = [
     `PASO: ${paso}`,
     `MODO: ${modo}`,
-    `Datos del paciente: edad ${edad || "no indicada"}, sexo ${sexo || "no indicado"}.`,
+    `Datos del paciente: edad ${edad || "no indicada"}, sexo ${sexo || "no indicado"}, ocupación ${ocupacion ? JSON.stringify(ocupacion) : "no indicada"}.`,
   ];
   if (modo === "control") {
     lineas.push(

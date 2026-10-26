@@ -2,10 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import Grabadora from "./grabadora";
+import Fotos from "./fotos";
 import Tutorial, { tutorialVisto } from "./tutorial";
 import { Icono, Logo } from "./marca";
 import {
   aplicarRespuestas,
+  AYUDAS,
+  ENFERMEDADES_FRECUENTES,
+  esSoloSi,
+  REPREGUNTA_GENERAL,
   fechaLegible,
   fichaComoTexto,
   fichaVacia,
@@ -22,7 +27,7 @@ import { actualizarBase, borrarFichaGuardada, guardarFicha, leerFichaGuardada } 
 import { crearArchivoPdf, precargarPdf } from "@/lib/pdf";
 
 const PASOS = ["Cuéntanos", "Preguntas", "Tu ficha"];
-const DATOS_VACIOS = { nombre: "", edad: "", sexo: "", contacto: "" };
+const DATOS_VACIOS = { nombre: "", edad: "", sexo: "", contacto: "", ocupacion: "" };
 const MOTIVO_VACIO = { eleccion: "", otro: "", cantidad: "", unidad: "dias" };
 const SEXOS = ["Femenino", "Masculino", "Prefiero no decir"];
 const SEGUNDOS_POR_RESPUESTA = 45;
@@ -107,6 +112,21 @@ function DatosGenerales({ datos, onChange }) {
             ))}
           </select>
         </div>
+      </div>
+      <div>
+        <label htmlFor="ocupacion" className={etiqueta}>
+          Ocupación <span className="font-normal text-slate-500">(opcional)</span>
+        </label>
+        <input
+          id="ocupacion"
+          name="ocupacion"
+          type="text"
+          maxLength={60}
+          value={datos.ocupacion}
+          onChange={onChange}
+          placeholder="Ejemplo: maestra, albañil, estudiante"
+          className={campo}
+        />
       </div>
       <div>
         <label htmlFor="contacto" className={etiqueta}>
@@ -384,7 +404,9 @@ function FichaGuardada({ registro, onBorrar, onCambiarBase }) {
 }
 
 // La ficha como hoja clínica: mismas secciones y numeración que el PDF.
-function HojaDeFicha({ modo, anterior, datos, onDato, ficha, onFicha, fecha }) {
+const NOMBRE_FOTO = { lesion: "Lo que le molesta", medicamento: "Medicamento" };
+
+function HojaDeFicha({ modo, anterior, datos, onDato, ficha, onFicha, fecha, fotos = [] }) {
   return (
     <section className="overflow-hidden rounded-md border border-slate-300 bg-white shadow-sm">
       <div className="border-t-4 border-teal-700 px-3 pt-3 pb-3">
@@ -434,6 +456,20 @@ function HojaDeFicha({ modo, anterior, datos, onDato, ficha, onFicha, fecha }) {
             <option key={sexo}>{sexo}</option>
           ))}
         </select>
+      </div>
+      <div className={filaHoja}>
+        <label htmlFor="ocupacion" className={etiquetaHoja}>
+          Ocupación
+        </label>
+        <input
+          id="ocupacion"
+          name="ocupacion"
+          type="text"
+          value={datos.ocupacion}
+          onChange={onDato}
+          placeholder="No referida"
+          className={datoHoja}
+        />
       </div>
       <div className={filaHoja}>
         <label htmlFor="contacto" className={etiquetaHoja}>
@@ -495,6 +531,23 @@ function HojaDeFicha({ modo, anterior, datos, onDato, ficha, onFicha, fecha }) {
           )}
         </div>
       ))}
+
+      {fotos.length > 0 && (
+        <div>
+          <h3 className={tituloHoja}>
+            {tituloNumerado(seccionesPara(modo).length + 1, "Fotos adjuntas por el paciente")}
+          </h3>
+          <ul className="grid grid-cols-3 gap-2 border-t border-slate-200 p-3" data-fotos-ficha>
+            {fotos.map((foto, i) => (
+              <li key={foto.id}>
+                {/* eslint-disable-next-line @next/next/no-img-element -- foto local del paciente */}
+                <img src={foto.url} alt={`${NOMBRE_FOTO[foto.tipo]} ${i + 1}`} className="aspect-square w-full rounded object-cover" />
+                <p className="mt-1 text-xs text-slate-600">{NOMBRE_FOTO[foto.tipo]}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </section>
   );
 }
@@ -522,6 +575,8 @@ export default function Home() {
   const [error, setError] = useState("");
   const [aviso, setAviso] = useState("");
   const [tutorialAbierto, setTutorialAbierto] = useState(false);
+  const [repreguntada, setRepreguntada] = useState(""); // "ronda-pregunta" donde ya se pidió el detalle
+  const [fotos, setFotos] = useState([]); // { id, tipo: "lesion" | "medicamento", url, ancho, alto }; solo van al PDF
 
   // El tutorial se muestra solo la primera vez que alguien abre la app en este teléfono.
   useEffect(() => {
@@ -570,6 +625,7 @@ export default function Home() {
         edad: d.edad || registro.datos.edad || "",
         sexo: d.sexo || registro.datos.sexo || "",
         contacto: d.contacto || registro.datos.contacto || "",
+        ocupacion: d.ocupacion || registro.datos.ocupacion || "",
       }));
     }
   }
@@ -598,6 +654,7 @@ export default function Home() {
     cuerpo.set("modo", modo);
     cuerpo.set("edad", datos.edad);
     cuerpo.set("sexo", datos.sexo);
+    cuerpo.set("ocupacion", datos.ocupacion); // la ocupación sí ayuda a la IA; el nombre y el contacto no
     if (modo === "control" && guardada) {
       cuerpo.set(
         "base",
@@ -731,6 +788,13 @@ export default function Home() {
   }
 
   function siguiente(lista = respuestas) {
+    // Si contestó solo "sí", se le pide el detalle una vez antes de seguir.
+    const clave = `${ronda}-${actual}`;
+    const r = lista[actual];
+    if (!r.audio && esSoloSi(r.texto) && repreguntada !== clave) {
+      setRepreguntada(clave);
+      return;
+    }
     if (actual < preguntas.length - 1) {
       setActual(actual + 1);
       setError("");
@@ -772,7 +836,7 @@ export default function Home() {
   async function descargarPdf() {
     setAviso("");
     try {
-      descargar(await crearArchivoPdf(datos, ficha, { modo, anterior }));
+      descargar(await crearArchivoPdf(datos, ficha, { modo, anterior, fotos }));
     } catch {
       setAviso("No se pudo crear el PDF. Intenta de nuevo.");
     }
@@ -782,7 +846,7 @@ export default function Home() {
   async function compartirPdf() {
     setAviso("");
     try {
-      const archivo = await crearArchivoPdf(datos, ficha, { modo, anterior });
+      const archivo = await crearArchivoPdf(datos, ficha, { modo, anterior, fotos });
       if (navigator.canShare?.({ files: [archivo] })) {
         await navigator.share({
           files: [archivo],
@@ -822,23 +886,41 @@ export default function Home() {
     setRespondidas([]);
     setFicha(fichaVacia());
     setAlarma("");
+    setFotos([]);
     irA(0);
   }
 
   const asunto = `${MODOS[modo].tituloFicha}${datos.nombre ? ` - ${datos.nombre}` : ""}`;
   const enlaceWhatsApp =
     paso === 2
-      ? `https://wa.me/?text=${encodeURIComponent(fichaComoTexto(datos, ficha, { modo, anterior }))}`
+      ? `https://wa.me/?text=${encodeURIComponent(fichaComoTexto(datos, ficha, { modo, anterior, fotos: fotos.length }))}`
       : "#";
   const enlaceCorreo =
     paso === 2
       ? `mailto:?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(
-          fichaComoTexto(datos, ficha, { negritas: false, modo, anterior })
+          fichaComoTexto(datos, ficha, { negritas: false, modo, anterior, fotos: fotos.length })
         )}`
       : "#";
 
   const respuesta = respuestas[actual];
   const esUltima = actual === preguntas.length - 1;
+  const campoActual = preguntas[actual]?.campo;
+  const pideDetalle = paso === 1 && repreguntada === `${ronda}-${actual}` && esSoloSi(respuestas[actual]?.texto);
+  const elegidas = String(respuestas[actual]?.texto || "")
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+
+  // Botones de enfermedades: agregan o quitan la enfermedad del texto de la respuesta.
+  function marcarEnfermedad(opcion) {
+    let lista;
+    if (opcion === "Ninguna") lista = elegidas.includes("Ninguna") ? [] : ["Ninguna"];
+    else {
+      const sinNinguna = elegidas.filter((t) => t !== "Ninguna");
+      lista = sinNinguna.includes(opcion) ? sinNinguna.filter((t) => t !== opcion) : [...sinNinguna, opcion];
+    }
+    cambiarRespuesta(actual, { texto: lista.join(", ") });
+  }
   const esControl = modo === "control";
 
   return (
@@ -963,6 +1045,14 @@ export default function Home() {
                 }
                 className={campo}
               />
+              <Fotos
+                fotos={fotos}
+                onCambiar={setFotos}
+                tipo="lesion"
+                titulo="Fotos de lo que te molesta"
+                ayuda="Por ejemplo una roncha, una herida o una inflamación. Solo van en el PDF para tu médico: no se envían a la IA ni se guardan. No incluyas tu cara."
+                deshabilitado={cargando}
+              />
             </section>
 
             {error && (
@@ -1025,17 +1115,61 @@ export default function Home() {
                   maxSegundos={SEGUNDOS_POR_RESPUESTA}
                 />
               </div>
+              {campoActual === "enfermedades" && (
+                <div className="mt-4">
+                  <p className={etiqueta}>Toca las que tengas</p>
+                  <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Enfermedades frecuentes">
+                    {[...ENFERMEDADES_FRECUENTES, "Ninguna"].map((opcion) => {
+                      const elegida = elegidas.includes(opcion);
+                      return (
+                        <button
+                          key={opcion}
+                          type="button"
+                          aria-pressed={elegida}
+                          onClick={() => marcarEnfermedad(opcion)}
+                          className={`min-h-10 rounded-full border px-3.5 text-sm font-medium transition focus:outline-none focus:ring-4 focus:ring-marca/25 ${
+                            elegida ? "border-marca bg-marca text-white" : "border-borde bg-white text-tinta hover:bg-slate-50"
+                          }`}
+                        >
+                          {opcion}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {pideDetalle && (
+                <p
+                  role="status"
+                  className="mt-4 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-sm font-medium text-teal-900"
+                  data-repregunta
+                >
+                  {AYUDAS[campoActual]?.repregunta ?? REPREGUNTA_GENERAL} Escríbelo o grábalo; si prefieres no
+                  decirlo, toca Siguiente otra vez.
+                </p>
+              )}
               <label htmlFor="respuesta" className={`${etiqueta} mt-4`}>
-                O escribe tu respuesta
+                {campoActual === "enfermedades" ? "O escríbelas, con desde cuándo" : "O escribe tu respuesta"}
               </label>
               <textarea
                 id="respuesta"
-                rows={2}
+                rows={campoActual === "medicamentos" ? 3 : 2}
                 maxLength={1000}
                 value={respuesta.texto}
                 onChange={(e) => cambiarRespuesta(actual, { texto: e.target.value })}
+                placeholder={AYUDAS[campoActual]?.ejemplo}
                 className={campo}
               />
+              {(campoActual === "medicamentos" || campoActual === "tomado") && (
+                <Fotos
+                  fotos={fotos}
+                  onCambiar={setFotos}
+                  tipo="medicamento"
+                  titulo="Fotos de tus medicamentos"
+                  ayuda="La caja, el frasco o la receta, para que tu médico sepa exactamente cuál tomas. Solo van en el PDF."
+                  deshabilitado={cargando}
+                />
+              )}
               <div className="mt-3 flex flex-wrap gap-2">
                 {Object.keys(RESPUESTAS_RAPIDAS).map((rapida) => (
                   <button
@@ -1082,6 +1216,7 @@ export default function Home() {
               ficha={ficha}
               onFicha={(id, valor) => setFicha((f) => ({ ...f, [id]: valor }))}
               fecha={fecha}
+              fotos={fotos}
             />
 
             <section className={tarjeta}>

@@ -4,7 +4,7 @@ Dos entregas: un feature nuevo, feedback con usuarios reales y correcciones a pa
 
 ## Semana 1: entrega el 21 de octubre
 
-- [ ] Conseguir a 2 pacientes y 1 médico (listos los 2 pacientes; falta el médico)
+- [x] Conseguir a 2 pacientes y 1 médico
 - [x] Decidir si se guarda la grabación ([decisión 6](decisiones.md#6-la-grabación-no-se-guarda-14-de-octubre-de-2026))
 - [x] Reorganizar el README en documentos separados
 - [x] Historial de consultas: evolución y respuesta al tratamiento ([decisión 5](decisiones.md#5-historial-de-consultas-en-el-teléfono-no-en-una-base-de-datos-14-de-octubre-de-2026))
@@ -17,8 +17,11 @@ Dos entregas: un feature nuevo, feedback con usuarios reales y correcciones a pa
 ## Semana 2: entrega el 28 de octubre
 
 - [x] Editar antecedentes (medicamentos, alergias, enfermedades) en modo control sin borrar el historial (Issue #3)
-- [ ] Sesiones de feedback: Paciente 1 y Paciente 2 listos; falta el médico
-- [ ] Documentar lo que dijeron en [sesiones.md](feedback/sesiones.md) (falta el médico)
-- [ ] Elegir las correcciones más importantes en [resumen.md](feedback/resumen.md)
-- [ ] Hacer las correcciones y volver a correr las pruebas
+- [x] Sesiones de feedback con 2 pacientes y 1 médico
+- [x] Documentar lo que dijeron en [sesiones.md](feedback/sesiones.md)
+- [x] Cambios pedidos por el médico: repregunta del "sí", medicamentos completos, enfermedades con un toque, orden de antecedentes y ocupación ([decisión 9](decisiones.md#9-antecedentes-como-los-pide-el-médico-23-de-octubre-de-2026))
+- [x] Fotos de la lesión y de los medicamentos, solo dentro del PDF, a partir de los médicos de turno ([decisión 10](decisiones.md#10-fotos-solo-dentro-del-pdf-26-de-octubre-de-2026))
+- [x] Actualizar Next.js a 16.4.3 por una falla de seguridad crítica
+- [x] Elegir las correcciones más importantes en [resumen.md](feedback/resumen.md)
+- [x] Hacer las correcciones y volver a correr las pruebas
 - [ ] Publicar la versión final con el resumen del feedback

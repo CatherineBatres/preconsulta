@@ -7,6 +7,7 @@ import {
   fichaVacia,
   lineaPaciente,
   motivoConEvolucion,
+  esSoloSi,
   normalizarFicha,
   PRIORIDAD,
   tituloNumerado,
@@ -120,4 +121,26 @@ test("la prioridad de preguntas usa campos que existen y empieza por el síntoma
   assert.ok(PRIORIDAD.indexOf("tomado") < PRIORIDAD.indexOf("sintomas"));
   assert.ok(PRIORIDAD.indexOf("caracteristicas") < PRIORIDAD.indexOf("sintomas"));
   assert.ok(PRIORIDAD.includes("contactos"));
+});
+
+test("esSoloSi reconoce un 'sí' sin detalle, con o sin acento", () => {
+  for (const r of ["Sí", "si", "SI.", " sí! ", "Claro", "sip", "Así es"]) assert.equal(esSoloSi(r), true, r);
+  for (const r of ["", "No", "Sí, a la penicilina", "Sí tomo losartán", "No sé"]) assert.equal(esSoloSi(r), false, r);
+});
+
+test("los antecedentes van en el orden del médico: alergias primero", () => {
+  const antecedentes = CAMPOS.filter((c) => ["alergias", "enfermedades", "cirugias", "medicamentos"].includes(c.id));
+  assert.deepEqual(antecedentes.map((c) => c.id), ["alergias", "enfermedades", "cirugias", "medicamentos"]);
+  assert.ok(PRIORIDAD.indexOf("alergias") < PRIORIDAD.indexOf("medicamentos"));
+});
+
+test("lineaPaciente incluye la ocupación", () => {
+  assert.equal(lineaPaciente({ edad: "40", sexo: "Femenino", ocupacion: "Maestra" }), "40 años, Femenino, Maestra");
+});
+
+test("fichaComoTexto avisa cuántas fotos van en el PDF", () => {
+  const ficha = { ...fichaVacia(), motivo: "Roncha" };
+  assert.match(fichaComoTexto({}, ficha, { fotos: 2 }), /Hay 2 fotos adjuntas en el PDF/);
+  assert.match(fichaComoTexto({}, ficha, { fotos: 1 }), /Hay 1 foto adjunta en el PDF/);
+  assert.doesNotMatch(fichaComoTexto({}, ficha), /foto/);
 });

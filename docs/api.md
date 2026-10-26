@@ -8,7 +8,7 @@ El navegador envía `multipart/form-data`, así el audio viaja como archivo bina
 | --- | --- | --- |
 | `paso` | siempre | `analizar` (primera llamada) o `completar` (cada ronda de respuestas) |
 | `modo` | siempre | `primera` (primera vez) o `control` (seguimiento) |
-| `edad`, `sexo` | siempre | Edad y sexo, opcionales |
+| `edad`, `sexo`, `ocupacion` | siempre | Edad, sexo y ocupación, opcionales |
 | `base` | `control` | La ficha base guardada, en JSON: `{ enfermedades, alergias, medicamentos, anterior: { fecha, motivo }, historial: [hasta 3 consultas] }` |
 | `yaPreguntados` | siempre | Lista JSON de los campos que ya se preguntaron, para no repetirlos |
 | `texto` | `analizar` | El relato escrito, hasta 4,000 caracteres |

@@ -98,28 +98,76 @@ Copia el bloque para cada persona y llénalo el mismo día. Sin nombres completo
 
 </details>
 
+### Paciente 2, segunda ronda: comentarios de médicos de turno
+
+- **Fecha:** 26 de octubre de 2026 (audio por WhatsApp)
+- **Perfil:** el Paciente 2 le mostró la app a unos tres médicos de su turno y mandó lo que le dijeron.
+
+**Lo que dijeron**
+- **Poder agregar fotos**, desde la primera pregunta: ronchas, cortaduras, inflamación. Ayuda al médico a ver qué tipo de lesión es. Lo repitieron varias veces: "eso de agregar fotos ayudaría un montón".
+- **Fotos de los medicamentos**, porque la gente confunde los nombres y no sabe bien qué toma.
+- **En antecedentes, una lista** de enfermedades comunes (diabetes, hipertensión, hipotiroidismo) en vez de una pregunta tan directa, porque a veces la gente no sabe qué responder. Esto coincide con lo que pidió el Médico 1 y ya se agregó (enfermedades con un toque).
+- En general, la app está "bastante bien" y las preguntas están "bien guiadas".
+
+**Citas textuales**
+- "A veces hay ronchas, hay cortaduras, hay inflamación; ayudaría mucho agregar una foto."
+- "La gente tiende a confundir medicamentos y no los comprende bien."
+
+**Problemas encontrados**
+
+| Problema | Dónde pasó | Qué tan grave |
+| --- | --- | --- |
+| No se pueden mandar fotos de una lesión | Paso 1 | Medio (corregido: "Fotos de lo que te molesta", solo en el PDF) |
+| El paciente no siempre sabe el nombre de su medicamento | Paso 2 | Medio (corregido: "Fotos de tus medicamentos", solo en el PDF) |
+| Pregunta de enfermedades muy directa | Paso 2 | Medio (corregido: enfermedades con un toque, 23 de octubre) |
+
+<details>
+<summary>Transcripción del audio (automática, con Whisper; puede tener errores)</summary>
+
+> ¿Qué onda? Estoy de turno. Entonces le enseñaré tu aplicación a mis doctoras, aquí los de turno. Y este, fíjate qué me dijeron por ejemplo al inicio, cuando en la primera pregunta, […] es este, si pudían agregar como un apartado de agregar fotos también, porque por ejemplo a veces hay ronchas, hay cortaduras, hay inflamación, entonces ayudaría mucho así como a bueno, agregar una también, porque por ejemplo a veces hay ronchas, hay cortaduras, hay inflamación, entonces ayudaría mucho así como a bueno agregar una foto de si tiene ronchas, entonces ayuda un poco a discernir este qué tipo de lesión puede hacer, entonces eso ayudaría mucho. Aparte me comentaron también esto de en los antecedentes, sin lugar como que de preguntar pudieras hacer también así como un listado, como diabetes, hipertensión, hipotiroidismo o algo así. Porque a veces la gente no sabe […], entonces ayudaría mucho que pusieran un apartado en lugar de una pregunta tan directa y siempre está como que las preguntas y luego el otro, vamos por si hay alguien que tenga algo más, pero poner así como las enfermedades más comunes, que es una hipertensión, diabetes, hipotiroidismo. Y en el otro apartado de si toma algún medicamento, si pueden colocar como también para agregar fotos, porque a veces la gente confunde los medicamentos. O sea, si se pudiera agregar, porque por eso mismo que la gente tiende a confundir medicamentos y no los comprende bien. Más que todo eso y de ahí acaban las mismas sugerencias como que Dios está en medio hecho. Y en general me dijeron que estaba bastante bien y estaba bien como tengo bien bien guiados. Pero como digo, bien, bien guiados, pero como digo eso de agregar fotos ayudaría un montón y de ahí fueron casi que las mismas sugerencias que te dio él, entonces eso fue lo que me comentaron como tres doctores ahorita acá, entonces, pero sí, solo, espero que te ayude.
+
+</details>
+
 ---
 
 ## Médico 1
 
-- **Fecha:**
-- **Especialidad:**
-- **Cómo recibe hoy la información del paciente:**
+- **Fecha:** 21 de octubre de 2026 (audio y mensajes por WhatsApp, a través del visitador médico)
+- **Especialidad:** el formulario que compartió es de una consulta de cirugía vascular (venas y arterias)
+- **Cómo recibe hoy la información del paciente:** con un formulario de "Ficha de datos generales" que el paciente llena en computadora, o imprime, llena a mano y envía en foto antes de la consulta. El formulario dice que su objetivo es "disminuir su tiempo de espera en clínica".
 
-**Opinión sobre la ficha de primera vez**
--
+**Lo que dijo**
+- La ficha se puede **ordenar mejor**.
+- En antecedentes, las preguntas deben ser **más específicas** para que las personas entiendan qué se les pregunta.
+- En medicamentos hay que saber **cada cuánto** lo toma y **desde hace cuánto**.
+- Respondió varias preguntas con "sí" o "no" y **la app no le preguntó cuál, ni por qué**.
+- Si la meta es acelerar o acortar la consulta, la ficha tiene que quedar más completa.
 
-**Opinión sobre la ficha de control**
--
+**Lo que tiene su formulario** (se tomó la forma general, no las preguntas propias de su especialidad)
+- Datos generales: nombre, edad, fecha de nacimiento, profesión, correo, teléfonos, dirección, persona que acompaña y quién lo refiere.
+- Datos administrativos: seguro médico, póliza, DPI y datos de factura. No aplican a PreConsulta: son del consultorio y son datos sensibles que la app no debe pedir ni enviar.
+- Motivo de consulta "resumido en sus propias palabras".
+- Alergias: sí o no y, si es sí, **el nombre del medicamento**.
+- **Lista de enfermedades para marcar:** fuma, presión alta, diabetes, colesterol, corazón, cerebro, pulmón, estómago, riñón, tiroides u hormonas, fracturas, hospitalizaciones de más de 3 días, depresión o ansiedad, reumatológicas, ginecológicas, urológicas y vasculares.
+- Cirugías: pregunta abierta.
+- **Tabla de medicamentos:** nombre, dosis, cuántas al día, a qué hora y para qué lo toma, con un ejemplo lleno.
 
-**Respuestas a las preguntas**
--
+**Citas textuales**
+- "Yo respondí en varias sí o no, y no me pregunta por qué no o por qué sí."
+- "Si la intención es acelerar o acortar la consulta, pues sí, hay que llenar un poquito mejor la ficha."
 
-**Citas textuales que vale la pena guardar**
-- ""
+**Problemas encontrados**
 
-**Cambios que pidió**
-
-| Cambio | Por qué | Prioridad (alta / media / baja) |
+| Problema | Dónde pasó | Qué tan grave |
 | --- | --- | --- |
-| | | |
+| Un "sí" queda sin detalle (¿a qué es alérgico?, ¿qué medicamento?) | Paso 2 | Alto |
+| Medicamentos sin dosis, frecuencia, desde cuándo ni para qué | Paso 2 y ficha | Alto |
+| "¿Tienes alguna enfermedad?" es muy abierta; la gente no sabe qué contar | Paso 2 | Medio |
+| El orden de la ficha no es el que el médico espera | Ficha y PDF | Medio |
+
+<details>
+<summary>Transcripción del audio (automática, con Whisper; puede tener errores)</summary>
+
+> Siento que puede ordenar un poquito mejor la ficha. Preguntar si en los antecedentes… preguntas como más específicas para que las personas entiendan. Y si está tomando algún medicamento, poner cada cuánto lo está tomando, desde hace cuánto lo está tomando, para que se entienda un poquito más sobre ahí. Si la intención es acelerar o acortar la consulta, pues sí, hay que llenar un poquito mejor la ficha.
+
+</details>

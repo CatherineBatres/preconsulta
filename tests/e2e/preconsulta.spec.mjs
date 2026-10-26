@@ -111,6 +111,91 @@ test("el motivo elegido con un toque queda como motivo de consulta con su tiempo
   await expect(page.locator("#ficha-contactos")).toBeVisible();
 });
 
+test("si responde solo 'sí' le pide el detalle, y las enfermedades se marcan con un toque", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#ocupacion").fill("Maestra");
+  await page.locator("#texto").fill("Tengo tos. SIMULAR_ANTECEDENTES");
+  await page.getByRole("button", { name: "Continuar" }).click();
+
+  // Alergias: "Sí" no basta
+  await expect(page.locator("#respuesta")).toHaveAttribute("placeholder", /penicilina/);
+  await page.locator("#respuesta").fill("Sí");
+  await page.getByRole("button", { name: "Siguiente pregunta" }).click();
+  await expect(page.locator("[data-repregunta]")).toContainText("¿A qué eres alérgico y qué te pasa?");
+  await expect(page.getByText("Pregunta 1 de 2")).toBeVisible();
+  await page.locator("#respuesta").fill("Sí, a la penicilina");
+  await expect(page.locator("[data-repregunta]")).toHaveCount(0);
+  await page.getByRole("button", { name: "Siguiente pregunta" }).click();
+
+  // Enfermedades: botones que llenan la respuesta
+  await expect(page.getByText("Pregunta 2 de 2")).toBeVisible();
+  await page.getByRole("button", { name: "Presión alta" }).click();
+  await page.getByRole("button", { name: "Diabetes" }).click();
+  await expect(page.locator("#respuesta")).toHaveValue("Presión alta, Diabetes");
+  await page.getByRole("button", { name: "Diabetes" }).click();
+  await expect(page.locator("#respuesta")).toHaveValue("Presión alta");
+  await page.getByRole("button", { name: "Ninguna" }).click();
+  await expect(page.locator("#respuesta")).toHaveValue("Ninguna");
+  await expect(page.getByRole("button", { name: "Presión alta" })).toHaveAttribute("aria-pressed", "false");
+
+  // Si insiste con "sí" la segunda vez, la app lo deja seguir
+  await page.locator("#respuesta").fill("si");
+  const peticion = page.waitForRequest("**/api/ficha");
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(page.locator("[data-repregunta]")).toBeVisible();
+  await page.getByRole("button", { name: "Continuar" }).click();
+  const cuerpo = (await peticion).postData();
+  expect(cuerpo).toContain("Sí, a la penicilina");
+  expect(cuerpo).toContain("Maestra");
+});
+
+const PNG_1X1 = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+  "base64"
+);
+const foto = (nombre) => ({ name: nombre, mimeType: "image/png", buffer: PNG_1X1 });
+
+test("las fotos van solo en el PDF: no se envían a la IA", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#texto").fill("Me salió una roncha en el brazo desde hace tres días.");
+  const entrada = page.locator('[data-entrada-fotos="lesion"]');
+  await entrada.setInputFiles([foto("roncha.png"), foto("roncha2.png")]);
+  const lesion = page.locator('[data-fotos="lesion"] img');
+  await expect(lesion).toHaveCount(2);
+  await page.getByRole("button", { name: "Quitar foto 2" }).click();
+  await expect(lesion).toHaveCount(1);
+
+  const peticiones = [];
+  page.on("request", (r) => r.url().includes("/api/ficha") && peticiones.push(r.postData() ?? ""));
+  await page.getByRole("button", { name: "Continuar" }).click();
+
+  // En la pregunta de medicamentos se puede agregar la foto de la caja
+  await expect(page.getByText("Pregunta 1 de 3")).toBeVisible();
+  for (let i = 0; i < 2; i++) await page.getByRole("button", { name: "No sé" }).click();
+  await expect(page.locator('[data-fotos="medicamento"]')).toBeVisible();
+  await page.locator('[data-entrada-fotos="medicamento"]').setInputFiles(foto("caja.png"));
+  await expect(page.locator('[data-fotos="medicamento"] img')).toHaveCount(1);
+  await page.locator("#respuesta").fill("Losartán, la caja está en la foto");
+  await page.getByRole("button", { name: "Continuar" }).click();
+  for (let i = 0; i < 2; i++) await page.getByRole("button", { name: "No sé" }).click();
+
+  await expect(page.getByRole("heading", { name: "Envíala a tu médico" })).toBeVisible();
+  await expect(page.locator("[data-fotos-ficha] img")).toHaveCount(2);
+  const whatsapp = await page.getByRole("link", { name: "WhatsApp", exact: true }).getAttribute("href");
+  expect(decodeURIComponent(whatsapp)).toContain("Hay 2 fotos adjuntas en el PDF");
+
+  expect(peticiones.length).toBeGreaterThan(0);
+  for (const cuerpo of peticiones) {
+    expect(cuerpo).not.toContain("data:image");
+    expect(cuerpo).not.toContain("image/jpeg");
+  }
+
+  const descarga = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Descargar PDF" }).click();
+  const pdf = await readFile(await (await descarga).path());
+  expect(pdf.toString("latin1")).toContain("/Subtype /Image");
+});
+
 test("consulta de control: retoma la ficha guardada y pregunta por la evolución", async ({ page }) => {
   await page.goto("/");
   await page.evaluate((clave) => {

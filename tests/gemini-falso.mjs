@@ -99,6 +99,17 @@ http
                 { campo: "medicamentos", pregunta: "¿Sigues tomando tus medicamentos o empezaste alguno nuevo?" },
               ],
         };
+      } else if (texto.includes("SIMULAR_ANTECEDENTES") && !completar) {
+        // Para probar la repregunta del "sí" y los botones de enfermedades.
+        salida = {
+          transcripcion: "",
+          alarma: "",
+          ficha: { ...vacia, motivo: "Tos de 3 días de evolución" },
+          preguntas: [
+            { campo: "alergias", pregunta: "¿Eres alérgico a algún medicamento o alimento? Si sí, ¿a cuál?" },
+            { campo: "enfermedades", pregunta: "¿Tienes alguna enfermedad, como presión alta o diabetes?" },
+          ],
+        };
       } else {
         salida = {
           transcripcion: !completar && hayAudio ? "Desde hace tres días tengo dolor de cabeza por las tardes." : "",
