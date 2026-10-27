@@ -10,7 +10,7 @@ App: https://preconsulta-iota.vercel.app/ · Detalle técnico: [README](README.e
 - Quedaron resueltos los **Issues #2, #3 y #4** de la revisión del 14 de octubre.
 - Se actualizó **Next.js a 16.4.3** por una falla de seguridad crítica.
 - **Pruebas:** 34 unitarias y 18 de punta a punta, todas pasando.
-- **Pendiente principal:** la prueba en teléfonos reales con Gemini y abrir los formularios de feedback.
+- **Pendiente principal:** probar en teléfonos reales con Gemini, juntar feedback de 10 personas y cerrar el proyecto antes de la reunión del 3 o 4 de noviembre.
 
 ## Ajustes finales aplicados esta semana (20 al 26 de octubre)
 
@@ -67,21 +67,38 @@ App: https://preconsulta-iota.vercel.app/ · Detalle técnico: [README](README.e
 - [Hipótesis del proyecto](docs/hipotesis.md) para Guatemala y otros países: cómo medirlas, diseño de un piloto para un paper y camino como producto.
 - Decisiones 7 a 13 en [decisiones.md](docs/decisiones.md); [plan](docs/plan.md), [pruebas](docs/pruebas.md), [arquitectura](docs/arquitectura.md) y [API](docs/api.md) al día.
 
-## Plan para la última semana
+## Plan para la última semana (27 de octubre al 2 de noviembre)
 
-| # | Tarea | Para cuándo | Cómo se verifica |
-| --- | --- | --- | --- |
-| 1 | **Prueba en teléfonos reales con Gemini** (Android y, si se consigue, iPhone): una ficha de primera vez y un control grabando 30 segundos | 28/10 | La ficha sale completa; capturas en `docs/img/` y casilla marcada en `plan.md` |
-| 2 | **Corregir lo que salga de esa prueba** | 29/10 | Commit con las correcciones y pruebas pasando |
-| 3 | **Quitar del repo los PDFs con nombres de personas** (`ejemplos_preconsulta/`, `ficha-ejemplo*.pdf`) y dejar solo ejemplos inventados | 28/10 | Los archivos ya no aparecen en `main` |
-| 4 | **Publicar los formularios en Google Forms** y enviarlos por WhatsApp con el enlace de la app | 28/10 | Enlaces de los formularios en `docs/feedback/README.md` |
-| 5 | **Recolectar respuestas:** meta de 10 pacientes y 3 médicos | 31/10 | Resumen de respuestas en `docs/feedback/resumen.md` |
-| 6 | **Mostrar la versión nueva al Médico 1 y al Paciente 2** ("antes y después") | 30/10 | Su opinión anotada en `sesiones.md` |
-| 7 | **Comparar los resultados con las hipótesis** (uso, tiempo, satisfacción) | Fin de la semana | Sección de resultados en `docs/hipotesis.md` |
-| 8 | **Cierre:** actualizar README, artículo y capturas; preparar la presentación final | Fin de la semana | README y artículo con la versión final |
+**Entregables antes de la reunión del 3 o 4 de noviembre**
+
+1. `ESTADO-2-11.md` en este repo con los resultados del feedback de 10 personas, las conclusiones y los aprendizajes, para dar el proyecto por concluido.
+2. Un artículo publicado sobre los aprendizajes del proyecto.
+3. Este repo listo: documentación final, sin datos personales y con la app publicada funcionando.
+4. Un repo nuevo en la organización [innovationlabug](https://github.com/innovationlabug) con el siguiente proyecto y un `SPEC.md` (plan de 4 semanas, distribución de la carga y 2 rondas de feedback de usuarios). Si el siguiente proyecto continúa PreConsulta, será un fork.
+
+**Día por día**
+
+| Fecha | Tarea | Cómo se verifica |
+| --- | --- | --- |
+| Mar 27/10 | Subir este `ESTADO-27-10.md` | Archivo en `main` antes del mediodía |
+| Mar 27/10 | Quitar del repo los PDFs con nombres de personas (`ejemplos_preconsulta/`, `ficha-ejemplo*.pdf`); dejar solo ejemplos inventados | Los archivos ya no aparecen en `main` |
+| Mar 27/10 | Pasar los [formularios](docs/feedback/formulario-pacientes.md) de pacientes y [médicos](docs/feedback/formulario-medicos.md) a Google Forms | Enlaces en `docs/feedback/README.md` |
+| Mié 28/10 | Prueba en teléfonos reales con Gemini (Android y, si se consigue, iPhone): una ficha de primera vez y un control grabando 30 segundos | Ficha completa; capturas en `docs/img/`; casilla marcada en `plan.md` |
+| Mié 28/10 | Enviar los formularios con el enlace de la app: pacientes, el Médico 1, el Paciente 2, los médicos de turno y contactos del visitador médico | Primeras respuestas recibidas |
+| Jue 29/10 | Corregir lo que salga de la prueba en teléfono | Commit con correcciones; pruebas pasando |
+| Jue 29/10 | Definir el siguiente proyecto: uno nuevo o la continuación de PreConsulta (por ejemplo, un piloto en un consultorio para el paper de las [hipótesis](docs/hipotesis.md)) | Decisión anotada en `docs/decisiones.md` |
+| Vie 30/10 | Llegar a **10 respuestas** (meta: al menos 7 pacientes y 3 médicos); recordar a quien falte | 10 respuestas en los formularios |
+| Vie 30/10 | Crear el repo nuevo en innovationlabug (o el fork) y escribir el borrador de `SPEC.md`: objetivo, semanas 1 a 4, quién hace qué y 2 rondas de feedback (semanas 2 y 4) | Repo creado con `SPEC.md` en borrador |
+| Sáb 31/10 y Dom 1/11 | Analizar las respuestas: rapidez, diseño, confianza, recomendación del 0 al 10 y respuestas a "¿Tienes este problema?", "¿Cómo lo resuelves hoy?" y "¿Qué buscarías primero?". Compararlas con las hipótesis | Tabla de resultados en `docs/feedback/resumen.md` |
+| Sáb 31/10 y Dom 1/11 | Escribir el artículo de aprendizajes: qué se construyó, qué enseñó el feedback, decisiones como quitar las fotos de lesiones, qué falló y qué sigue | Borrador completo |
+| Lun 2/11 | Escribir y subir `ESTADO-2-11.md`: resultados de las 10 personas, conclusiones y aprendizajes | Archivo en `main` |
+| Lun 2/11 | Publicar el artículo y enlazarlo desde los README | Enlace público en `README.md` y `README.es.md` |
+| Lun 2/11 | Revisión final de los dos repos: README al día, `plan.md` cerrado, `SPEC.md` final, enlaces funcionando | Lista de cierre marcada |
+| Mar 3 o Mié 4/11 | Reunión de cierre | — |
 
 ### Riesgos
 
-- **Gemini real:** las pruebas automáticas usan una IA simulada, así que la prueba en teléfono (tareas 1 y 2) es lo más importante de la semana.
-- **Pocas respuestas en los formularios:** se mandarán por medio del visitador médico y de los médicos que ya participaron.
-- **Privacidad:** quitar los PDFs con nombres (tarea 3) antes de compartir más el repo.
+- **Gemini real.** Las pruebas automáticas usan una IA simulada, así que la prueba en teléfono del 28/10 es lo primero. Si algo falla, el 29/10 queda reservado para corregirlo.
+- **No llegar a 10 respuestas.** Los formularios salen desde el 28/10 por varios canales (visitador médico, médicos que ya participaron, conocidos). Si el 30/10 faltan, se completan con sesiones cortas por WhatsApp.
+- **Poco tiempo para el artículo y el `SPEC.md`.** Se escriben en paralelo con el análisis del feedback; el artículo reutiliza `decisiones.md`, `resumen.md` y el artículo anterior.
+- **Privacidad.** Hay que quitar los PDFs con nombres (27/10) antes de compartir más el repo y de publicar el artículo.
