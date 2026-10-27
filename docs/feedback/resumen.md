@@ -38,7 +38,7 @@ Resumen de las sesiones con dos pacientes, un médico y un grupo de médicos de 
 | Preguntas de antecedentes muy abiertas | Enfermedades frecuentes para marcar con un toque | Médico 1 | Media | Hecho |
 | El orden de la ficha | Antecedentes en el orden de su formulario: alergias, enfermedades, cirugías, medicamentos | Médico 1 | Media | Hecho |
 | Falta la ocupación | Campo opcional en datos generales | Médico 1 (su formulario) | Baja | Hecho |
-| No se pueden mandar fotos | Fotos de la lesión y de los medicamentos, solo dentro del PDF ([decisión 10](../decisiones.md#10-fotos-solo-dentro-del-pdf-26-de-octubre-de-2026)) | Médicos de turno | Alta | Hecho |
+| No se pueden mandar fotos | Fotos de los medicamentos, solo dentro del PDF ([decisión 10](../decisiones.md#10-fotos-solo-dentro-del-pdf-26-de-octubre-de-2026)) | Médicos de turno | Alta | Hecho |
 | "Tiroides" poco claro | El botón dice "Tiroides (hipo o hipertiroidismo)" | Médicos de turno | Baja | Hecho |
 | La ficha no tenía todo lo de una historia clínica | Localización, a qué lo atribuye, escala del 1 al 10 con botones, mediciones en casa, gineco-obstétricos, hábitos, viajes y animales, municipio ([decisión 11](../decisiones.md#11-ficha-más-completa-como-una-historia-clínica-26-de-octubre-de-2026)) | Revisión contra fichas de referencia | Alta | Hecho |
 
@@ -46,8 +46,13 @@ Resumen de las sesiones con dos pacientes, un médico y un grupo de médicos de 
 
 - **Enviar la ficha directo al número del consultorio** (Paciente 1). El médico recibe hoy su formulario por WhatsApp o en foto, igual que PreConsulta lo comparte ahora, así que no hace falta.
 - **Seguro médico, póliza, DPI y datos de factura** (formulario del médico). Son trámites del consultorio y datos sensibles; la app no debe pedirlos ni mandarlos a la IA.
+- **Fotos de lesiones** (médicos de turno). Se probaron, pero se quitaron por privacidad: la app no puede controlar qué foto se sube y el PDF se reenvía con facilidad. El médico puede pedir la foto directamente si la necesita ([decisión 13](../decisiones.md#13-sin-fotos-de-lesiones-solo-de-medicamentos-26-de-octubre-de-2026)).
 - **Que la IA lea la caja del medicamento** (idea a partir de los médicos de turno). Las etiquetas de farmacia a veces traen el nombre del paciente; por ahora el médico ve la foto en el PDF.
 - **Preguntas de una especialidad** (por ejemplo, alergia al contraste yodado). PreConsulta es para consulta general.
+
+## Para seguir recibiendo feedback
+
+Hay dos formularios listos para copiar a Google Forms: uno para [pacientes](formulario-pacientes.md) y otro para [médicos](formulario-medicos.md). Incluyen preguntas sobre el problema ("¿Tienes este problema?", "¿Cómo lo resuelves hoy?", "¿Qué es lo primero que buscarías en un software?"), rapidez, diseño y valor. Sus resultados sirven para comprobar las [hipótesis del proyecto](../hipotesis.md).
 
 ## Lo que confirmó o cambió las decisiones del proyecto
 

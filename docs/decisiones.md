@@ -2,6 +2,16 @@
 
 Registro de las decisiones del proyecto: qué se decidió, por qué y qué se descartó. Las más recientes van primero.
 
+## 13. Sin fotos de lesiones; solo de medicamentos (26 de octubre de 2026)
+
+**Contexto.** Los médicos de turno pidieron fotos de lesiones (ronchas, heridas, inflamación) y se agregaron en la decisión 10. Al revisarlo se vio un riesgo: la app no puede controlar qué foto sube la persona. Podría ser una zona íntima, la foto de un niño o algo que no tiene que ver, y el PDF viaja por WhatsApp, donde se reenvía con facilidad.
+
+**Decisión.** Se quitan las fotos de lesiones. Se quedan las **fotos de medicamentos** (caja, frasco o receta), con el aviso "No tomes fotos de personas". Siguen sin enviarse a la IA ni guardarse.
+
+**Por qué.** El riesgo de una foto del cuerpo es alto y la app no tiene cómo revisarla. El médico ya tiene el mapa del cuerpo, la descripción ("Cómo es") y la escala; si necesita ver la lesión, se la puede pedir al paciente directamente, por el canal que él controla. La foto de un medicamento tiene poco riesgo y resuelve un problema real: la gente confunde los nombres.
+
+**Qué se descartó.** Revisar las fotos con IA antes de agregarlas: implicaría mandar fotos del cuerpo a un servicio externo, que es justo lo que se quiere evitar.
+
 ## 12. Más interactiva: pantallas cortas, mapa del cuerpo y avance (26 de octubre de 2026)
 
 **Contexto.** Con las preguntas nuevas, el paso 1 se volvió una página larga y la entrevista podía sentirse tediosa.
@@ -35,6 +45,8 @@ Registro de las decisiones del proyecto: qué se decidió, por qué y qué se de
 **Qué se descartó por ahora.** Vacunas, una revisión rápida por sistemas y la opción de llenar la ficha para otra persona (un niño o un adulto mayor, con sus propias preguntas). Quedan como trabajo futuro. Estado civil y fecha de nacimiento no aportan a una preconsulta.
 
 ## 10. Fotos solo dentro del PDF (26 de octubre de 2026)
+
+> Actualizada por la [decisión 13](#13-sin-fotos-de-lesiones-solo-de-medicamentos-26-de-octubre-de-2026): las fotos de lesiones se quitaron; quedan las de medicamentos.
 
 **Contexto.** Unos tres médicos de turno revisaron la app (por medio del Paciente 2) y pidieron poder agregar fotos: de una lesión (roncha, herida, inflamación) para ver qué tipo es, y de los medicamentos, porque la gente confunde sus nombres.
 

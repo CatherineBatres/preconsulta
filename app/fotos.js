@@ -2,8 +2,8 @@
 
 import { useRef, useState } from "react";
 
-// Fotos que el paciente agrega para su médico: una lesión (roncha, herida, inflamación)
-// o la caja de un medicamento. Los médicos de turno lo pidieron (ver decisión 10).
+// Fotos que el paciente agrega para su médico: solo de la caja, el frasco o la receta de un
+// medicamento. Las fotos de lesiones se quitaron por privacidad (ver decisión 13).
 // Las fotos solo existen en la memoria del navegador y van dentro del PDF:
 // no se envían a la IA ni se guardan en el teléfono.
 export const MAX_FOTOS = 3;

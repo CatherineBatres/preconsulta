@@ -181,16 +181,12 @@ const PNG_1X1 = Buffer.from(
 );
 const foto = (nombre) => ({ name: nombre, mimeType: "image/png", buffer: PNG_1X1 });
 
-test("las fotos van solo en el PDF: no se envían a la IA", async ({ page }) => {
+test("solo se piden fotos de medicamentos, y van solo en el PDF: no se envían a la IA", async ({ page }) => {
   await page.goto("/");
   await ir(page, "Tu relato");
-  await page.locator("#texto").fill("Me salió una roncha en el brazo desde hace tres días.");
-  const entrada = page.locator('[data-entrada-fotos="lesion"]');
-  await entrada.setInputFiles([foto("roncha.png"), foto("roncha2.png")]);
-  const lesion = page.locator('[data-fotos="lesion"] img');
-  await expect(lesion).toHaveCount(2);
-  await page.getByRole("button", { name: "Quitar foto 2" }).click();
-  await expect(lesion).toHaveCount(1);
+  // Ya no se piden fotos de lesiones (decisión 13)
+  await expect(page.locator('[data-fotos="lesion"]')).toHaveCount(0);
+  await page.locator("#texto").fill("Dolor de cabeza por las tardes desde hace tres días.");
 
   const peticiones = [];
   page.on("request", (r) => r.url().includes("/api/ficha") && peticiones.push(r.postData() ?? ""));
@@ -199,17 +195,19 @@ test("las fotos van solo en el PDF: no se envían a la IA", async ({ page }) => 
   // En la pregunta de medicamentos se puede agregar la foto de la caja
   await expect(page.getByText("Pregunta 1 de 3")).toBeVisible();
   for (let i = 0; i < 2; i++) await page.getByRole("button", { name: "No sé" }).click();
-  await expect(page.locator('[data-fotos="medicamento"]')).toBeVisible();
-  await page.locator('[data-entrada-fotos="medicamento"]').setInputFiles(foto("caja.png"));
+  await expect(page.locator('[data-fotos="medicamento"]')).toContainText("No tomes fotos de personas");
+  await page.locator('[data-entrada-fotos="medicamento"]').setInputFiles([foto("caja.png"), foto("receta.png")]);
+  await expect(page.locator('[data-fotos="medicamento"] img')).toHaveCount(2);
+  await page.getByRole("button", { name: "Quitar foto 2" }).click();
   await expect(page.locator('[data-fotos="medicamento"] img')).toHaveCount(1);
   await page.locator("#respuesta").fill("Losartán, la caja está en la foto");
   await page.getByRole("button", { name: "Continuar" }).click();
   for (let i = 0; i < 2; i++) await page.getByRole("button", { name: "No sé" }).click();
 
   await expect(page.getByRole("heading", { name: "Envíala a tu médico" })).toBeVisible();
-  await expect(page.locator("[data-fotos-ficha] img")).toHaveCount(2);
+  await expect(page.locator("[data-fotos-ficha] img")).toHaveCount(1);
   const whatsapp = await page.getByRole("link", { name: "WhatsApp", exact: true }).getAttribute("href");
-  expect(decodeURIComponent(whatsapp)).toContain("Hay 2 fotos adjuntas en el PDF");
+  expect(decodeURIComponent(whatsapp)).toContain("Hay 1 foto adjunta en el PDF");
 
   expect(peticiones.length).toBeGreaterThan(0);
   for (const cuerpo of peticiones) {

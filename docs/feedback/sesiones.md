@@ -117,7 +117,7 @@ Copia el bloque para cada persona y llénalo el mismo día. Sin nombres completo
 
 | Problema | Dónde pasó | Qué tan grave |
 | --- | --- | --- |
-| No se pueden mandar fotos de una lesión | Paso 1 | Medio (corregido: "Fotos de lo que te molesta", solo en el PDF) |
+| No se pueden mandar fotos de una lesión | Paso 1 | Medio (se agregó y luego se quitó por privacidad, decisión 13) |
 | El paciente no siempre sabe el nombre de su medicamento | Paso 2 | Medio (corregido: "Fotos de tus medicamentos", solo en el PDF) |
 | Pregunta de enfermedades muy directa | Paso 2 | Medio (corregido: enfermedades con un toque, 23 de octubre) |
 

@@ -488,7 +488,7 @@ function FichaGuardada({ registro, onBorrar, onCambiarBase }) {
 }
 
 // La ficha como hoja clínica: mismas secciones y numeración que el PDF.
-const NOMBRE_FOTO = { lesion: "Lo que le molesta", medicamento: "Medicamento" };
+const NOMBRE_FOTO = { medicamento: "Medicamento" };
 
 function HojaDeFicha({ modo, anterior, datos, onDato, ficha, onFicha, fecha, fotos = [] }) {
   return (
@@ -633,7 +633,7 @@ function HojaDeFicha({ modo, anterior, datos, onDato, ficha, onFicha, fecha, fot
       {fotos.length > 0 && (
         <div>
           <h3 className={tituloHoja}>
-            {tituloNumerado(seccionesPara(modo, datos).length + 1, "Fotos adjuntas por el paciente")}
+            {tituloNumerado(seccionesPara(modo, datos).length + 1, "Fotos de medicamentos")}
           </h3>
           <ul className="grid grid-cols-3 gap-2 border-t border-slate-200 p-3" data-fotos-ficha>
             {fotos.map((foto, i) => (
@@ -676,9 +676,9 @@ export default function Home() {
   const [repreguntada, setRepreguntada] = useState(""); // "ronda-pregunta" donde ya se pidió el detalle
   const [mediciones, setMediciones] = useState({}); // { temperatura, presion, glucosa, peso } medidas en casa
   const [evolucionElegida, setEvolucionElegida] = useState(""); // en control: "Mucho peor"… "Mucho mejor"
-  const [fotos, setFotos] = useState([]);
+  const [fotos, setFotos] = useState([]); // fotos de medicamentos: { id, tipo, url, ancho, alto }; solo van al PDF
   const [pantalla, setPantalla] = useState("tipo"); // pantalla del paso 1
-  const [lugares, setLugares] = useState([]); // lugares del cuerpo tocados en el mapa // { id, tipo: "lesion" | "medicamento", url, ancho, alto }; solo van al PDF
+  const [lugares, setLugares] = useState([]); // lugares del cuerpo tocados en el mapa
 
   // El tutorial se muestra solo la primera vez que alguien abre la app en este teléfono.
   useEffect(() => {
@@ -1289,14 +1289,6 @@ export default function Home() {
                     }
                     className={campo}
                   />
-                  <Fotos
-                    fotos={fotos}
-                    onCambiar={setFotos}
-                    tipo="lesion"
-                    titulo="Fotos de lo que te molesta"
-                    ayuda="Por ejemplo una roncha, una herida o una inflamación. Solo van en el PDF para tu médico: no se envían a la IA ni se guardan. No incluyas tu cara."
-                    deshabilitado={cargando}
-                  />
                 </section>
               )}
             </div>
@@ -1467,7 +1459,7 @@ export default function Home() {
                   onCambiar={setFotos}
                   tipo="medicamento"
                   titulo="Fotos de tus medicamentos"
-                  ayuda="La caja, el frasco o la receta, para que tu médico sepa exactamente cuál tomas. Solo van en el PDF."
+                  ayuda="Solo la caja, el frasco o la receta, para que tu médico sepa exactamente cuál tomas. No tomes fotos de personas. Solo van en el PDF: no se envían a la IA ni se guardan."
                   deshabilitado={cargando}
                 />
               )}

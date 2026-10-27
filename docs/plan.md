@@ -23,6 +23,8 @@ Dos entregas: un feature nuevo, feedback con usuarios reales y correcciones a pa
 - [x] Fotos de la lesión y de los medicamentos, solo dentro del PDF, a partir de los médicos de turno ([decisión 10](decisiones.md#10-fotos-solo-dentro-del-pdf-26-de-octubre-de-2026))
 - [x] Ficha más completa, comparada con historias clínicas de referencia: localización, a qué lo atribuye, escala del 1 al 10 con botones, mediciones en casa, gineco-obstétricos, hábitos con botones, viajes y animales, transfusiones y municipio ([decisión 11](decisiones.md#11-ficha-más-completa-como-una-historia-clínica-26-de-octubre-de-2026))
 - [x] Más interactiva: paso 1 por pantallas, mapa del cuerpo, avance de la ficha, mensajes de ánimo y cierre "¡Tu ficha está lista!" ([decisión 12](decisiones.md#12-más-interactiva-pantallas-cortas-mapa-del-cuerpo-y-avance-26-de-octubre-de-2026))
+- [x] Quitar las fotos de lesiones por privacidad; se quedan las de medicamentos ([decisión 13](decisiones.md#13-sin-fotos-de-lesiones-solo-de-medicamentos-26-de-octubre-de-2026))
+- [x] Formularios de feedback para [pacientes](feedback/formulario-pacientes.md) y [médicos](feedback/formulario-medicos.md), e [hipótesis del proyecto](hipotesis.md)
 - [x] Actualizar Next.js a 16.4.3 por una falla de seguridad crítica
 - [x] Elegir las correcciones más importantes en [resumen.md](feedback/resumen.md)
 - [x] Hacer las correcciones y volver a correr las pruebas

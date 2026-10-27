@@ -48,3 +48,4 @@ Abre http://localhost:3000. Pruebas: `npm test` (unitarias) y `npm run test:e2e`
 | [Decisiones](docs/decisiones.md) | Qué se decidió y por qué: grabación, historial, esquema JSON, Next.js |
 | [Feedback](docs/feedback/README.md) | Kit para las pruebas con pacientes y médicos, y lo que dijeron |
 | [Plan](docs/plan.md) | Entregas de las próximas semanas |
+| [Hipótesis](docs/hipotesis.md) | Hipótesis para Guatemala y otros países, cómo medirlas y cómo venderlo como producto |

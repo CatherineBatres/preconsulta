@@ -10,7 +10,7 @@ npm test
 - una primera vez que recorre el paso 1 por pantallas (con Atrás), dos rondas de preguntas con avance y ánimo, las respuestas rápidas y la marca "Sin respuesta", el PDF y el guardado en el teléfono;
 - el motivo elegido con un toque ("Fiebre de 5 días de evolución"), que ninguna ronda de la IA puede cambiar;
 - la repregunta cuando el paciente responde solo "sí", los botones de enfermedades y la ocupación;
-- las fotos de la lesión y del medicamento: aparecen en la ficha y en el PDF, y nunca van en lo que se envía a la IA;
+- solo se piden fotos de medicamentos (no de lesiones): aparecen en la ficha y en el PDF, y nunca van en lo que se envía a la IA;
 - las escalas del 1 al 10, las mediciones en casa y el municipio, que no se manda a la IA;
 - la sección gineco-obstétrica solo en mujeres, con "Prefiero no decir", y los botones de hábitos;
 - la escala de intensidad dentro de una pregunta, sin borrar lo que se escribió;

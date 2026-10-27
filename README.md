@@ -50,3 +50,4 @@ The detailed documents are in Spanish.
 | [Decisions](docs/decisiones.md) | What was decided and why: recordings, history, JSON schema, Next.js |
 | [Feedback](docs/feedback/README.md) | Kit for testing with patients and doctors, and what they said |
 | [Plan](docs/plan.md) | Deliveries for the coming weeks |
+| [Hypotheses](docs/hipotesis.md) | Hypotheses for Guatemala and other countries, how to measure them, product path (Spanish) |
