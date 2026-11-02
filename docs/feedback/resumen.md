@@ -1,6 +1,6 @@
 # Resumen del feedback
 
-Resumen de las sesiones con dos pacientes, un médico y un grupo de médicos de turno. Las notas completas y las transcripciones están en [sesiones.md](sesiones.md).
+Resumen de las sesiones con dos pacientes, un médico y un grupo de médicos de turno. Las notas completas y las transcripciones están en [sesiones.md](sesiones.md). Los resultados del formulario con 14 pacientes están en [resultados.md](resultados.md).
 
 ## Quiénes participaron
 

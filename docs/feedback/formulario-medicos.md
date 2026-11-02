@@ -2,6 +2,8 @@
 
 Versión para médicos y médicas. Está pensada para copiarse a Google Forms y mandarse con el enlace de la app y un [PDF de ejemplo](ejemplos/ficha-primera-vez.pdf). Toma unos 7 minutos.
 
+**Versión publicada:** https://forms.gle/cVszKv1rf1ZjbL7a8.
+
 **Tipos de pregunta**
 - **Escala 1 a 5:** 1 = muy en desacuerdo o muy malo, 5 = muy de acuerdo o muy bueno.
 - **Opción múltiple:** marcar una. **Casillas:** marcar varias.

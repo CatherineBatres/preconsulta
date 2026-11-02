@@ -1,4 +1,4 @@
-# Plan: segunda etapa (14 al 28 de octubre de 2026)
+# Plan: segunda etapa y cierre (14 de octubre al 2 de noviembre de 2026)
 
 Dos entregas: un feature nuevo, feedback con usuarios reales y correcciones a partir de ese feedback.
 
@@ -9,7 +9,7 @@ Dos entregas: un feature nuevo, feedback con usuarios reales y correcciones a pa
 - [x] Reorganizar el README en documentos separados
 - [x] Historial de consultas: evolución y respuesta al tratamiento ([decisión 5](decisiones.md#5-historial-de-consultas-en-el-teléfono-no-en-una-base-de-datos-14-de-octubre-de-2026))
 - [x] Evitar que la transcripción en vivo corte la grabación en teléfonos (Issue #2, [decisión 8](decisiones.md#8-sin-transcripción-en-vivo-en-teléfonos-20-de-octubre-de-2026))
-- [ ] Probar en un teléfono real con Gemini: grabar un control de 30 segundos y revisar que la ficha salga completa
+- [x] Probar en un teléfono real con Gemini: 14 personas usaron la app publicada, 12 desde el teléfono (9 Android, 3 iPhone), sin reportar fallas
 - [x] Mini tutorial de bienvenida y rediseño visual (encabezado con logo, pasos numerados, aviso "No te responde un médico") a partir del feedback del Paciente 1
 - [x] Motivo de consulta con un toque, preguntas en orden de interrogatorio y tres datos nuevos, a partir del feedback del Paciente 2 ([decisión 7](decisiones.md#7-el-motivo-de-consulta-se-elige-con-un-toque-antes-del-relato-19-de-octubre-de-2026))
 - [x] Kit de feedback: [guía de una página, guías de preguntas y formato de notas](feedback/README.md)
@@ -28,9 +28,23 @@ Dos entregas: un feature nuevo, feedback con usuarios reales y correcciones a pa
 - [x] Actualizar Next.js a 16.4.3 por una falla de seguridad crítica
 - [x] Elegir las correcciones más importantes en [resumen.md](feedback/resumen.md)
 - [x] Hacer las correcciones y volver a correr las pruebas
-- [ ] Publicar la versión final con el resumen del feedback
+- [x] Publicar la versión final con el resumen del feedback
+
+## Cierre: 27 de octubre al 2 de noviembre
+
+- [x] [ESTADO-27-10](../ESTADO-27-10.md) con el plan de la última semana
+- [x] Formularios de pacientes y médicos publicados en Google Forms
+- [x] 14 respuestas de pacientes analizadas en [resultados.md](feedback/resultados.md)
+- [ ] Respuestas de médicos (pasa a la siguiente etapa)
+- [x] Quitar del repositorio los PDF con nombres de personas reales
+- [x] Artículo del proceso completo, por fases
+- [x] [ESTADO-2-11](../ESTADO-2-11.md) con resultados, conclusiones y aprendizajes
+- [x] Continuar como fork en innovationlabug ([decisión 14](decisiones.md#14-continuar-preconsulta-como-un-fork-en-innovationlabug-2-de-noviembre-de-2026))
 
 ## Trabajo futuro
+
+La siguiente etapa se planea en el `SPEC.md` del fork en innovationlabug. Ideas anotadas antes del cierre:
+
 
 - Vacunas, revisión rápida por sistemas y llenar la ficha para otra persona (niño o adulto mayor) ([decisión 11](decisiones.md#11-ficha-más-completa-como-una-historia-clínica-26-de-octubre-de-2026))
 - Que la IA lea la caja del medicamento ([decisión 10](decisiones.md#10-fotos-solo-dentro-del-pdf-26-de-octubre-de-2026))

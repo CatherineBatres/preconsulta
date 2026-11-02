@@ -7,9 +7,9 @@ PreConsulta puede crecer de dos formas: como **producto** (algo que consultorios
 En una consulta, buena parte del tiempo se va en preguntar lo básico: por qué viene, desde cuándo, qué toma, a qué es alérgico. El paciente llega sin orden, olvida cosas o no sabe el nombre de sus medicamentos. El médico tiene poco tiempo y, en muchos lugares, muchos pacientes.
 
 En Guatemala esto pesa más:
-- Hay pocos médicos para la población: cerca de 1.2 por cada 1,000 habitantes (Banco Mundial, datos de 2020).
-- Un informe de la OPS de 2025 menciona a Guatemala entre los países con falta de personal de salud.
-- Más del 90% de las líneas telefónicas son móviles (SIT, 2022), y la gente usa cada vez más las aplicaciones de mensajería en vez de llamadas.
+- Hay pocos médicos para la población: cerca de 1.3 por cada 1,000 habitantes, según el [Banco Mundial](https://data.worldbank.org/indicator/SH.MED.PHYS.ZS?locations=GT) (dato de 2020).
+- El [informe de la OPS de 2025 sobre el personal de salud en las Américas](https://www.paho.org/es/documentos/fuerza-trabajo-salud-americas-datos-e-indicadores-regionales) señala que en Guatemala casi la mitad de los médicos tiene 55 años o más.
+- El 91% de las líneas telefónicas son celulares, según el boletín de la Superintendencia de Telecomunicaciones de junio de 2022 [citado por Prensa Libre](https://dplnews.com/?p=170570).
 
 ## Lo que ya se sabe (y por qué hay que medir bien)
 
@@ -44,8 +44,13 @@ En Guatemala esto pesa más:
 | Concordancia | Lo que dice la ficha comparado con lo que el médico anota en la consulta | 85% de acuerdo o más |
 | Tiempo | Minutos de anamnesis y minutos totales de la consulta, medidos con cronómetro | −2 minutos de anamnesis; la consulta no se alarga |
 | Uso | Fichas empezadas y terminadas; tiempo para llenarla; voz o texto | 60% o más termina |
+| Voz o texto | Formulario de pacientes: estudios, facilidad con el teléfono y edad, cruzados con "¿Preferiste hablar o escribir?"; en el piloto, si la ficha se llenó por voz o texto | Quienes tienen menos estudios o menos práctica con el teléfono usan más la voz, y su ficha queda igual de completa |
 | Satisfacción | Formularios de [pacientes](feedback/formulario-pacientes.md) y [médicos](feedback/formulario-medicos.md) | Recomendación de 8 o más (escala 0 a 10) |
 | Seguridad | Casos donde la ficha tenía un error que pudo confundir al médico; avisos de alarma | Cero errores graves |
+
+## Primeros resultados
+
+La primera ronda del formulario de pacientes (14 respuestas, 31 de octubre al 2 de noviembre de 2026) confirmó el problema, pero no alcanza para comprobar estas hipótesis: no hubo respuestas de médicos ni de personas de 60 años o más o con menos estudios. Detalle en [resultados.md](feedback/resultados.md#comparación-con-las-hipótesis).
 
 ## Diseño de estudio sugerido (para un paper)
 
@@ -77,9 +82,9 @@ En Guatemala esto pesa más:
 ## Fuentes
 
 - [Hornberger J, Thom D, MaCurdy T. Effects of a self-administered previsit questionnaire to enhance awareness of patients' concerns in primary care. J Gen Intern Med. 1997](https://pmc.ncbi.nlm.nih.gov/articles/PMC1497170)
-- [La Linterna: "en Guatemala hay 1.2 médicos por cada 1,000 habitantes" (datos del Banco Mundial, 2020)](https://lalinterna.agenciaocote.com/2023/08/09/verdadero-en-guatemala-hay-1-2-medicos-por-cada-1000-habitantes/)
-- [La Hora: Guatemala entre los países con más falta de personal médico, según informe de la OPS (2025)](https://lahora.gt/nacionales/dguzman/2025/04/30/guatemala-entre-los-paises-con-mas-falta-de-personal-medico-segun-informe-de-la-ops/)
-- [DPL News / Prensa Libre: menos llamadas, más datos móviles en Guatemala (boletín de la SIT, 2022)](https://dplnews.com/?p=170570)
+- Banco Mundial. [Médicos (por cada 1,000 personas), Guatemala](https://data.worldbank.org/indicator/SH.MED.PHYS.ZS?locations=GT). Dato de 2020.
+- Organización Panamericana de la Salud. [La fuerza de trabajo en salud en las Américas: datos e indicadores regionales](https://www.paho.org/es/documentos/fuerza-trabajo-salud-americas-datos-e-indicadores-regionales). 2025.
+- Superintendencia de Telecomunicaciones, boletín del primer semestre de 2022, citado en: Gamarro, U. ["Menos llamadas, pero mejor conectados"](https://dplnews.com/?p=170570). Prensa Libre, republicado por DPL News, 21 de octubre de 2022.
 - [ClinicalTrials.gov: estudio AI-CLINIC sobre entrevista previa con IA en cardiología (NCT07883304)](https://clinicaltrials.gov/study/NCT07883304)
 
 Ver también: [decisiones](decisiones.md) · [plan](plan.md) · [resumen del feedback](feedback/resumen.md)

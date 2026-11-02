@@ -24,7 +24,7 @@ Mensaje sugerido para enviar por WhatsApp:
 2. **Durante (pacientes, 15–20 min):** pídele que use la app con un caso inventado o una molestia leve, en voz alta si puede. **No le ayudes** mientras la usa: anota dónde duda, qué toca y qué pregunta. Después, haz las preguntas de la [guía para pacientes](guia-pacientes.md).
 3. **Durante (médico, 20–30 min):** muéstrale los PDF de ejemplo y, si hay tiempo, la app. Usa la [guía para el médico](guia-medico.md).
 4. **Después:** anota todo el mismo día en [`sesiones.md`](sesiones.md), con el formato que trae.
-5. **Para seguir recibiendo opiniones sin sesión:** usa los formularios para [pacientes](formulario-pacientes.md) y [médicos](formulario-medicos.md).
+5. **Para seguir recibiendo opiniones sin sesión:** usa los formularios para [pacientes](formulario-pacientes.md) y [médicos](formulario-medicos.md). Versiones publicadas: [pacientes](https://forms.gle/ABMp4NCHTYA8DKyg6) y [médicos](https://forms.gle/cVszKv1rf1ZjbL7a8). Resultados en [resultados.md](resultados.md).
 
 ## Reglas
 

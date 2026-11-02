@@ -2,6 +2,18 @@
 
 Registro de las decisiones del proyecto: qué se decidió, por qué y qué se descartó. Las más recientes van primero.
 
+## 14. Continuar PreConsulta como un fork en innovationlabug (2 de noviembre de 2026)
+
+**Contexto.** Al cerrar la etapa, el jefe pidió iniciar un repositorio nuevo en la organización innovationlabug con el siguiente proyecto y un `SPEC.md` de 4 semanas; si se sigue con el mismo proyecto, como un fork. Los resultados de 14 pacientes confirmaron el problema, pero las hipótesis principales (H1, H3, H4 y el lado del médico de H5) siguen sin comprobarse.
+
+**Decisión.** Seguir con PreConsulta en un fork de este repositorio dentro de innovationlabug. Este repositorio queda como la versión cerrada de la etapa y el fork recibe el trabajo nuevo.
+
+**Por qué.** Lo que falta (médicos, el enlace del consultorio y probar con adultos mayores y personas con menos estudios) se construye sobre la app que ya existe y ya fue probada. Un proyecto nuevo empezaría de cero sin haber comprobado la hipótesis.
+
+**Qué se descartó.** Empezar otro proyecto, y seguir en este mismo repositorio (el jefe pidió que el trabajo nuevo viva en la organización).
+
+**Cómo se verifica.** El fork existe en innovationlabug con su `SPEC.md`, y al final de las 4 semanas hay respuestas de médicos y de los grupos que faltaron.
+
 ## 13. Sin fotos de lesiones; solo de medicamentos (26 de octubre de 2026)
 
 **Contexto.** Los médicos de turno pidieron fotos de lesiones (ronchas, heridas, inflamación) y se agregaron en la decisión 10. Al revisarlo se vio un riesgo: la app no puede controlar qué foto sube la persona. Podría ser una zona íntima, la foto de un niño o algo que no tiene que ver, y el PDF viaja por WhatsApp, donde se reenvía con facilidad.
